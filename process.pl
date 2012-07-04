@@ -1,4 +1,31 @@
 #!/usr/bin/perl
+
+%TYPE_CONVERSIONS = (
+	'xmlNodePtr' => {
+		'goType'=>'*XmlNode',
+		'cConverter' => '%s.handler'
+		#'cType'
+	},
+	'xmlDocPtr' => {
+		'goType'=>'*XmlDoc',
+		'cConverter' => '%s.handler'
+		#'cType'
+	},
+	'const char *' => {
+		'goType' => 'string',
+		'cType'=>'C.CString',
+		'cConverter'=> 'C.CString(%s)' ,
+	},
+	'int' => {
+		'goType' => 'int',
+		#'cType'=>'C.int',
+		'cConverter'=> 'C.int(%s)' ,
+	},
+	'void' => {
+		
+	}	
+);
+
 use Data::Dumper;
 $CFLAGS = `pkg-config --cflags libxml-2.0`;
 chomp($CFLAGS);
@@ -6,6 +33,8 @@ $r = time;
 $r=1;
 $TMP = "/tmp/tmp".$r;
 mkdir $TMP;
+
+
 
 sub remove_includes {
 	my $content = shift;
@@ -56,7 +85,7 @@ sub process_functions {
 	print FH $content;
 	close(FH);
 	my $sys = "anjuta-tags --fields=iKST --c-kinds=p -o $TMP/tags  $TMP/t.h";
-	print $sys."\n";
+	#print $sys."\n";
 	system($sys);
 	
 	open(FH,"$TMP/tags");
@@ -73,10 +102,12 @@ sub process_functions {
 			$sig=~s/(^signature:\(|\)$)//g;
 			$returntype=~s/^returntype://g;
 			my @params = ();
-			foreach (split /,/,$sig) {
-				my ($k,$v) = m/^(.*\s\**)([a-zA-Z]\w+)$/;
-				$k=~s/(^ | $)//g;
-				push @params , [$k,$v];
+			if ($sig ne 'void') {
+				foreach (split /,/,$sig) {
+					my ($k,$v) = m/^(.*\s\**)([a-zA-Z]\w+)$/;
+					$k=~s/(^ | $)//g;
+					push @params , [$k,$v];
+				}
 			}
 			push @functions,{
 				name => $funcName,
@@ -88,12 +119,7 @@ sub process_functions {
 	}
 	return \@functions;
 }
-%TYPE_CONVERSIONS = (
-	'xmlNodePtr' => {
-		'goType'=>'*XmlNode',
-		#'cType'
-	}
-);
+
 
 sub compile_function {
 	my $f = shift;
@@ -105,58 +131,114 @@ sub compile_function {
 		die "$type not found for func $f->{name}" if (! $goType ) ;
 		push @args,"$name $goType";
 	}
-	my $retType = $TYPE_CONVERSIONS{$f->{retType}}->{goType};
 	
-	die "RetType $f->{retType} not found for func $f->{name}" if (! $retType ) ;
+	die "RetType $f->{retType} not found for func $f->{name}" if (! exists $TYPE_CONVERSIONS{$f->{retType}} ) ;
 	
-	my $func_str = "func $f->{name}(" . join(",",@args) . ")";
-	$func_str.=" $retType" if ($retType ne "void");
+	my $func_str = "func \u$f->{name}(" . join(",",@args) . ")";
+	$func_str.=" " . $TYPE_CONVERSIONS{$f->{retType}}->{goType} if ($f->{retType} ne "void");
 	my @content;
-	
-	foreach (@{$f->{params}}) {
-		my ($type,$name) = @{$_};
-		my $ctype =  $TYPE_CONVERSIONS{$type}->{cType};
-		my $line = "var c_$name C.$type";
-		push @content,$line;
-	}
 	
 	#foreach (@{$f->{params}}) {
 	#	my ($type,$name) = @{$_};
-	#	my $ctype =  $TYPE_CONVERSIONS{$type}->{cType};
-	#	my $line = "var c_$name C.$type";
+	#	my $ctype =  $TYPE_CONVERSIONS{$type}->{cType} || "C.".$type;
+	#	my $line = "\tc_$name :=";
 	#	push @content,$line;
 	#}
 	
-	if (  $retType ne 'void' ) {
-		if ( $retType=~/\*$/ ) {
-			
+	if (  $f->{retType} ne 'void' ) {
+		if ( $f->{retType}=~/\*$/ ) {
+			die "notimpl1!";
 		} else {
-			push @content,"var c_ret C.$retType";
+			push @content,"\tvar c_ret C.$f->{retType}";
+		}
+		if ( $TYPE_CONVERSIONS{$f->{retType}}->{goType}=~/^*\s*(\w+)$/ ) {
+			my $rt = $1;
+			push @content,"\tg_ret := &$rt\{\}";
+		} else {
+			die "notimpl2!";
+		}
+	}
+	
+	foreach (@{$f->{params}}) {
+		my ($type,$name) = @{$_};
+		$cConverter = sprintf $TYPE_CONVERSIONS{$type}->{cConverter} , $name;
+		my $line = "\tc_$name := $cConverter";
+		push @content,$line;
+	}
+	
+	my @callargs = ();
+	foreach (@{$f->{params}}) {
+		my ($type,$name) = @{$_};
+		push @callargs,"c_$name";
+	}
+	my $callline = "C." .$f->{name} . "(" . join(",",@callargs) . ")";
+	
+	if ($f->{retType} ne "void") {
+		$callline = "c_ret = " . $callline;
+	}
+	push @content,"\t".$callline;
+	
+	if ($f->{retType} ne "void") {
+		if ( $TYPE_CONVERSIONS{$f->{retType}}->{goType}=~/^*\s*(\w+)$/ ) {
+			#my $rt = $1;
+			my $f = sprintf $TYPE_CONVERSIONS{$f->{retType}}->{cConverter} , 'g_ret';
+			push @content, "\t$f = c_ret";
+			push @content,"\treturn g_ret";
 		}
 	}
 	
 	$func_str.= " {\n" . join("\n",@content) . "\n}\n";
-	print $func_str."";
+	
+	return $func_str; 
 }
+
 sub process {
 	my $f = shift;
-	
+	my ($include_path) = $f=~/(libxml\/\w+\.h)$/;
+	my ($file_path) = $f=~/(\w+\.h)$/;
+	$file_path =~s/\.h$/.go/;
 	my $content = `gcc -E $CFLAGS $f`;
 	
 	$content = &remove_includes($content,$f);
 	
 	$functions = &process_functions($content);
 	
+	my @funcs = ();
+	my $max = scalar @$functions;
+	#$max = 2;
+	%funcfilter = map{$_=>1} ('xmlReadFile','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump');
 	
-	for (my $i=0;$i<scalar @$functions;$i++) {
-		&compile_function($functions->[$i]);
-		last;
+	if ($ARGV[0]) {
+		%funcfilter = map{$_=>1} @ARGV;
 	}
 	
+	for (my $i=0;$i<$max;$i++) {
+		next unless (exists $funcfilter{$functions->[$i]->{name}});
+		print Dumper($functions->[$i]);
+		push @funcs ,&compile_function($functions->[$i]);
+	}
+	my $out_data = 
+'package goxml
+/*
+#cgo pkg-config: libxml-2.0
+#include <'.$include_path.'>
+*/
+import "C"
+';
+	$out_data.= join "\n",@funcs;
+	open(FH,">$file_path");
+	print FH $out_data;
+	close(FH);
+	
+	print $out_data;
 	#print @d;
 }
 
-@f= ("/usr/include/libxml2/libxml/tree.h");
+@f= (
+	"/usr/include/libxml2/libxml/tree.h",
+	"/usr/include/libxml2/libxml/parser.h",
+	"/usr/include/libxml2/libxml/xmlmemory.h",
+);
 foreach (@f) {
 	&process($_);
 }
