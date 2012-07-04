@@ -4,6 +4,7 @@ package goxml
 #include <libxml/xmlmemory.h>
 */
 import "C"
+
 func XmlMemoryDump() {
 	C.xmlMemoryDump()
 }

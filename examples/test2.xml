@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE Tablespaces [
+
+  <!--
+   | Used to create all required tablespaces in the database to be used by the 
+   | application.
+   +-->
+  <!ELEMENT Tablespaces (Tablespace+)>
+
+    <!--
+     | Any tablespace requires at least one Datafile and an optional (only one)
+     | Extent Management clause.
+     +-->
+    <!ELEMENT Tablespace (Datafile+, ExtentMgt?)>
+    <!ATTLIST Tablespace  name     CDATA                  #REQUIRED
+                          type     (permanent|temporary)  "permanent"
+                          logging  (true|false)           "true">
+
+      <!--
+       | The Datafile element requires a file name attribute and can define an 
+       | optional "Auto Extend" clause.
+       +-->
+      <!ELEMENT Datafile (Autoextend?)>
+      <!ATTLIST Datafile  name       CDATA         #REQUIRED
+                          size       CDATA         "500M"
+                          reusefile  (true|false)  "true"
+                          autoextend (on|off)      "off">
+
+        <!ELEMENT Autoextend EMPTY>
+        <!ATTLIST Autoextend  next  CDATA  "500M"
+                              max   CDATA  "unlimited">
+
+      <!--
+       | An optional Extent Management clause to declare for each tablespace.
+       +-->
+      <!ELEMENT ExtentMgt (AllocMethod?)>
+      <!ATTLIST ExtentMgt method (local|dictionary) "local">
+
+        <!ELEMENT AllocMethod EMPTY>
+        <!ATTLIST AllocMethod  method  (AUTOALLOCATE|UNIFORM) "AUTOALLOCATE"
+                               size    CDATA                  "1M">
+
+  ]>
+
+
+<Tablespaces>
+
+  <Tablespace name="APP_DATA" type="permanent" logging="true">
+    <Datafile name="/u10/app/oradata/ERPDB/app_data01.dbf" size="250M" reusefile="true" autoextend="off">
+    </Datafile>
+    <Datafile name="/u10/app/oradata/ERPDB/app_data02.dbf" size="250M" reusefile="true" autoextend="on">
+      <Autoextend next="500M" max="unlimited"/>
+    </Datafile>
+    <ExtentMgt method="local">
+      <AllocMethod method="AUTOALLOCATE"/>
+    </ExtentMgt>
+  </Tablespace>
+
+
+  <Tablespace name="APP_INDEX" type="permanent" logging="true">
+    <Datafile name="/u09/app/oradata/ERPDB/app_index01.dbf" size="250M" reusefile="true" autoextend="off">
+    </Datafile>
+    <Datafile name="/u09/app/oradata/ERPDB/app_index02.dbf" size="250M" reusefile="true" autoextend="on">
+      <Autoextend next="500M" max="unlimited"/>
+    </Datafile>
+    <ExtentMgt method="local">
+      <AllocMethod method="AUTOALLOCATE"/>
+    </ExtentMgt>
+  </Tablespace>
+
+
+  <Tablespace name="APP_TEMP" type="temporary" logging="false">
+    <Datafile name="/u07/app/oradata/ERPDB/app_temp01.dbf" size="500M" reusefile="true" autoextend="on">
+      <Autoextend next="500M" max="unlimited"/>
+    </Datafile>
+    <ExtentMgt method="local">
+      <AllocMethod method="UNIFORM" size="1M"/>
+    </ExtentMgt>
+  </Tablespace>
+
+</Tablespaces>

@@ -11,6 +11,12 @@
 		'cConverter' => '%s.handler'
 		#'cType'
 	},
+	'xmlParserCtxtPtr' => {
+		'goType'=>'*XmlParserCtxt',
+		'cConverter' => '%s.handler'
+		#'cType'
+	},
+	
 	'const char *' => {
 		'goType' => 'string',
 		'cType'=>'C.CString',
@@ -79,11 +85,40 @@ sub remove_includes {
 	return join "\n",@postprocess;
 }
 
+
+sub process_enums {
+	my $content = shift;	
+	open(FH,">$TMP/t.h");
+	print FH $content;
+	close(FH);
+	unlink "$TMP/tags";
+	my $sys = "anjuta-tags --fields=iKST -o $TMP/tags  $TMP/t.h";
+	#print $sys."\n";
+	system($sys);
+	
+	open(FH,"$TMP/tags");
+	@d=<FH>;
+	close(FH);
+	
+	my @vals;
+	@functions = ();
+	
+	foreach (@d) {
+		chomp;
+		my ($name,$file,$re,$type,$sig,undef)  = split /\t/;
+		if ($type eq 'enumerator') {
+			push @vals,$name;
+		}
+	}
+	return \@vals;
+}
+
 sub process_functions {
 	my $content = shift;	
 	open(FH,">$TMP/t.h");
 	print FH $content;
 	close(FH);
+	unlink "$TMP/tags";
 	my $sys = "anjuta-tags --fields=iKST --c-kinds=p -o $TMP/tags  $TMP/t.h";
 	#print $sys."\n";
 	system($sys);
@@ -92,7 +127,7 @@ sub process_functions {
 	@d=<FH>;
 	close(FH);
 	
-	@functions = ();
+	my @functions = ();
 	
 	foreach (@d) {
 		chomp;
@@ -202,11 +237,12 @@ sub process {
 	$content = &remove_includes($content,$f);
 	
 	$functions = &process_functions($content);
+	my $enums = &process_enums($content);
 	
 	my @funcs = ();
 	my $max = scalar @$functions;
 	#$max = 2;
-	%funcfilter = map{$_=>1} ('xmlReadFile','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump');
+	%funcfilter = map{$_=>1} ('xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile');
 	
 	if ($ARGV[0]) {
 		%funcfilter = map{$_=>1} @ARGV;
@@ -225,12 +261,17 @@ sub process {
 */
 import "C"
 ';
+	if (scalar @{$enums}) {
+		$out_data.= "\n";
+		$out_data.= join "\n",map {"const $_=C.$_" } @{$enums};
+	}
+	$out_data.= "\n";	
 	$out_data.= join "\n",@funcs;
 	open(FH,">$file_path");
 	print FH $out_data;
 	close(FH);
 	
-	print $out_data;
+	#print $out_data;
 	#print @d;
 }
 
@@ -242,3 +283,4 @@ import "C"
 foreach (@f) {
 	&process($_);
 }
+
