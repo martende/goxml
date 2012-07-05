@@ -14,7 +14,7 @@
 	'xmlParserCtxtPtr' => {
 		'goType'=>'*XmlParserCtxt',
 		'cConverter' => '%s.handler',
-		'export_as' => '_xmlParserCtxt'
+		'export_as' => 'xmlParserCtxt'
 		#'cType'
 	},
 	
@@ -32,8 +32,12 @@
 		
 	}	
 );
-use GCC::TranslationUnit;
 use Data::Dumper;
+$Data::Dumper::Maxdepth = 3;
+$Data::Dumper::Indent = 2;
+$Data::Dumper::Seen = ['chan'];
+
+
 $CFLAGS = `pkg-config --cflags libxml-2.0`;
 chomp($CFLAGS);
 $r = time;
@@ -286,63 +290,212 @@ import "C"
 	#print @d;
 }
 
-sub process_types {
-	my $f = shift;
-	open FH,">$TMP/t.c";
+sub test_type_processor() {
+	
 	#foreach (@$f) {
-	#	print FH "#include \"$_\"\n";
+	#	print FH 
 	#}
-	print FH '
+	my $v = &process_types('
 int kokoshnichek=2;
-struct _xmlParserCtxt {
-int kotenka; 
+
+struct m1 {
+	int a1;
+	int a2;
 };
+typedef struct m1 m1type;
+
+struct _xmlParserCtxt {
+	int kotenka1;
+	int *kotenka2;
+	int **kotenka3;
+	int ***kotenka4;
+	void *void1;
+	unsigned long* uint;
+	m1type *sref;
+	struct m1 sref2; 
+};
+
 typedef struct _xmlParserCtxt xmlParserCtxt;
-xmlParserCtxt mimimishka;
+xmlParserCtxt val_xmlParserCtxt;
 main(){};
-';
-# typedef struct _xmlParserCtxt xmlParserCtxt;
-#;
+',['xmlParserCtxt']);
+	print Dumper($v); 
+}
+
+
+sub process_xml_types {
+	my $includes = shift;
+	my $types = shift;
+	my $content = "";
+	foreach (@{$includes}) {
+		$content .= "#include \"$_\"\n";
+	}
+	$content .= "main() {\n";
+	foreach (@$types) {
+		$content .= "$_ val_$_;\n";
+	}
+	$content .= "}\n";
+	my $v = &process_types($content,$types);
+	#print Dumper($v);
+	print &create_C_struct("xmlParserCtxt",$v->{xmlParserCtxt});
+}
+
+sub create_C_struct {
+	my $t = shift;
+	my $s = shift;
+	$content = "struct _$t \{\n";
+	$content .= join("\n" , (map {"\t$_->[1]\t$_->[0];";} @{$s} ) );
+	$content .= "\n";
+	$content .="\} $t\n;";
+	
+	#print Dumper($t);
+	return $content;
+}
+
+sub create_go_struct {
+	my $t = shift;
+	my $s = shift;
+	
+}
+sub process_types {
+	my $content = shift;
+	my $types = shift;
+	
+	open FH,">$TMP/t.c";
+	print FH $content;
 	close(FH);
 	unlink("$TMP/t.c.001t.tu");
 	my $cmd = "cd $TMP/;gcc -fdump-translation-unit  $CFLAGS t.c";
 	#print $cmd ;
 	system($cmd);
 	
-	my $node = GCC::TranslationUnit::Parser->parsefile("$TMP/t.c.001t.tu")->root;
+	my @tu=();
+	open(FH,"$TMP/t.c.001t.tu");
+	my $dump;
+	while(my $line=<FH>) {
+		chomp $line;
+		if($line =~ /^\@(\d+)/) {
+			push @tu,&parse_tu_node($dump) if ($dump);
+			$dump = $line;
+		} else {
+			$dump .= $line;
+		}
+	}
+	close(FH);
 	
-	while($node) {
-		#print $node->name->identifier ."\t" . $node->source . "\n";
-		next if ($node->source eq '<built-in>:0' or ! $node->source);
-		print "NODE  " . ref $node ;
-		print "\n";
-		if( $node->isa('GCC::Node::function_decl') and $node->name) {
-			printf "%s declared in %s\n",
-			$node->name->identifier, $node->source;
-		}
-		if( $node->isa('GCC::Node::var_decl') and $node->name) {
-			if ($node->name->identifier eq 'mimimishka') {
-				#if ( $node->name->identifier
-				#delete $node->{init};
-				delete $node->{chan};
-				#delete $node->{type}->{name}->{chan};
-				print Dumper($node);
+	push @tu,&parse_tu_node($dump) if ($dump);
+	
+	foreach my $node (@tu) {
+		foreach (grep { $_!~/^__/ } keys %{$node}) {
+			if ($node->{$_}=~/^\@(.*)$/) {
+				$node->{$_}=$tu[$1-1];
 			}
-			
-			printf "%s declared in %s %s %s\n",
-			$node->name->identifier, $node->source, $node->type->name->name->identifier , $node->type->name->name->{string};
-			
-			#print Dumper($node);
 		}
-		if( $node->isa('GCC::Node::type_decl') and $node->name) {
-		  printf "%s declared in %s\n",
-		  	
-			$node->name->identifier, $node->source;
-		}
-	  } continue {
-		$node = $node->chain;
-	  }
+    }
+    
+    #print Dumper(@tu);
+    my  %ret;
+    foreach (@$types) {
+    	$ret{$_}=&restore_type(\@tu,"val_$_");
+    }
+    return \%ret;
+}
 
+sub restore_type {
+	my $tu = shift;
+	my $varname = shift;
+	
+	my @fields ; 
+	foreach my $el (@$tu) {
+		if ( $el->{TYPE} eq 'var_decl' and $el->{name}->{strg} eq $varname) {
+			# $el->{type}->{name}->{name}->{strg} eq $type
+			my $el_name = $el->{name}->{strg};
+			#if ( $el->{type}->{TYPE} eq 'record_type'
+			
+			die "NO type_decl" unless ($el->{type}->{name}->{TYPE} eq 'type_decl');
+			die "NO record_type" unless ($el->{type}->{TYPE} eq 'record_type');
+			
+			my $field = $el->{type}->{flds};
+			while ( $field) {
+				die "NO field_decl" unless ( $field->{TYPE} eq 'field_decl') ;
+				
+				my $name = $field->{name}->{strg};
+				my $type = &resrore_type_desc($field->{type});
+				#print Dumper($field->{type});
+				$field = $field->{chan};
+				
+				push @fields , [$name , $type];
+			}
+			last;
+		}
+	}
+	return \@fields;
+}
+
+sub resrore_type_desc {
+	#my \@tu = shift;
+	my $el = shift;
+	
+	if ($el->{TYPE} eq 'pointer_type') {
+		return &resrore_type_desc($el->{ptd}) . "*"; 
+	} elsif ( $el->{tag} eq 'struct') {
+		if ( $el->{name}->{TYPE} eq 'identifier_node') { 
+			return 'struct ' . $el->{name}->{strg}; 
+		} elsif ($el->{name}->{TYPE} eq 'type_decl' ){
+			return $el->{name}->{name}->{strg};
+		}	else  {
+			die "resrore_type_desc1";
+		}
+
+	}
+	return $el->{name}->{name}->{strg};
+}
+sub parse_tu_node {
+	my $dump = shift;
+	my $node = {};
+	my $td = $dump;
+	
+	unless($dump =~ s/^\@(\d+)\s+(\w+)(?=\s)//) {
+		die "Unknown node format:\n$dump";
+    }
+    my $index = $1;
+    my $type = $2;
+    $node->{TYPE} = $type;
+    $node->{__index} = $index;
+    $node->{__str} = $td;
+    if($dump =~ s/\s+strg:\s(.*)\slngt:\s(\d+)//s) {
+    	# identifier_node and string_cst come here, at least
+    	my($string, $length) = ($1, $2);
+    	# string_cst's lngt includes the NUL character, which fprintf()
+    	# doesn't print, obviously. Make sure to factor that in...
+    	$length-- if $type eq 'string_cst';
+    	$node->{'strg'} = substr($string, 0, $length);
+    	$node->{'lngt'} = $length;
+    }
+    $node->{'source'} = $1 if $dump =~ s/\ssrcp:\s(.*?:\d+)(?=\s)//;
+    if($dump =~ s/\squal:\s(.{3})\s//) {
+    	my $qual = $1;
+    	$node->{'const'}    = 1 if $qual =~ /c/;
+    	$node->{'volatile'} = 1 if $qual =~ /v/;
+    	$node->{'restrict'} = 1 if $qual =~ /r/;
+    }
+    
+    while($dump =~ s/\s(\w+)\s*:\s(\S+)//) {
+    	my($key, $value) = ($1, $2);
+    	$node->{$key} = $value;
+    }
+    # All that should remain is flags
+    while($dump =~ s/(\w+)//) {
+    	#print "TRUE $1\n";
+		$node->{$1} = 1;
+    }
+    
+    if($dump =~ /\S/) {
+    	$dump =~ s/\s+/ /g;
+    	die "Unparsed data: $dump\nFrom: $_[1] " . Dumper($node);
+    }
+
+	return $node;
 }
 %EXPORTED_TYPES = map {$TYPE_CONVERSIONS{$_}->{export_as}=>$_}  grep {exists $TYPE_CONVERSIONS{$_}->{export_as}} keys %TYPE_CONVERSIONS;
 
@@ -354,5 +507,5 @@ main(){};
 foreach (@f) {
 	&process($_);
 }
-
-&process_types(\@f);
+&process_xml_types(\@f,[keys %EXPORTED_TYPES])
+#&test_type_processor(\@f);
