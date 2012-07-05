@@ -10,6 +10,7 @@ type XmlNode struct {
 type XmlDoc struct {
 	handler C.xmlDocPtr
 }
+/*
 type XmlParserCtxt struct {
 	handler C.xmlParserCtxtPtr
 }
@@ -17,3 +18,4 @@ type XmlParserCtxt struct {
 func (this *XmlParserCtxt) GetValid() int{
 	return int(this.handler.valid)
 }
+*/

@@ -32,6 +32,11 @@
 		
 	}	
 );
+
+%EXPORTED_TYPES = map {$TYPE_CONVERSIONS{$_}->{export_as}=>$_}  
+					grep {exists $TYPE_CONVERSIONS{$_}->{export_as}} 
+						keys %TYPE_CONVERSIONS;
+
 use Data::Dumper;
 $Data::Dumper::Maxdepth = 3;
 $Data::Dumper::Indent = 2;
@@ -327,8 +332,11 @@ sub process_xml_types {
 	my $includes = shift;
 	my $types = shift;
 	my $content = "";
-	foreach (@{$includes}) {
-		$content .= "#include \"$_\"\n";
+	my $is = "";
+	foreach my $v(@{$includes}) {
+		$content .= "#include \"$v\"\n";
+		my ($include_path) = $v=~/(libxml\/\w+\.h)$/;
+		$is.= "#include <$include_path>\n" if ($include_path);
 	}
 	$content .= "main() {\n";
 	foreach (@$types) {
@@ -337,16 +345,28 @@ sub process_xml_types {
 	$content .= "}\n";
 	my $v = &process_types($content,$types);
 	#print Dumper($v);
-	print &create_C_struct("xmlParserCtxt",$v->{xmlParserCtxt});
+	#print &create_C_struct("xmlParserCtxt",$v->{xmlParserCtxt});
+	$content = 'package goxml
+/*
+#cgo pkg-config: libxml-2.0
+'.$is.'*/
+import "C"
+';
+	foreach (@$types) {
+		$content.= &create_go_struct($_,$v->{$_});
+	}
+	open(FH,">atypes.go");
+	print FH $content;
+	close(FH);
 }
 
 sub create_C_struct {
 	my $t = shift;
 	my $s = shift;
-	$content = "struct _$t \{\n";
+	my $content = "struct _$t \{\n";
 	$content .= join("\n" , (map {"\t$_->[1]\t$_->[0];";} @{$s} ) );
 	$content .= "\n";
-	$content .="\} $t\n;";
+	$content .="\} $t;\n";
 	
 	#print Dumper($t);
 	return $content;
@@ -355,7 +375,31 @@ sub create_C_struct {
 sub create_go_struct {
 	my $t = shift;
 	my $s = shift;
-	
+	my $content ="";
+	# Create getters
+	my $gotype = $TYPE_CONVERSIONS{$EXPORTED_TYPES{$t}}->{goType};
+	$gotype =~s/^\*//;
+	my $ctype = $EXPORTED_TYPES{$t};
+	$content .= "type $gotype struct {\n";
+	$content .= "\thandler C.$ctype\n";
+	$content .= "}\n";
+	foreach (@$s) {
+		my ($name,$type) = @{$_};
+		my $goftype = $type;
+		my $inner = "func (this *$gotype) Get\u$name() $goftype {\n";
+		my $found = 0;
+		if ( $type eq 'int') {
+			$inner .= "\treturn int(this.handler.$name)\n";
+			$found = 1;
+		}
+		$inner .= "}\n";
+		if ( $found ) {
+			$content .= $inner; 
+		} else {
+			$content .= "/*\n$inner*/\n";
+		}
+	}
+	return $content;
 }
 sub process_types {
 	my $content = shift;
@@ -497,7 +541,6 @@ sub parse_tu_node {
 
 	return $node;
 }
-%EXPORTED_TYPES = map {$TYPE_CONVERSIONS{$_}->{export_as}=>$_}  grep {exists $TYPE_CONVERSIONS{$_}->{export_as}} keys %TYPE_CONVERSIONS;
 
 @f= (
 #	"/usr/include/libxml2/libxml/tree.h",
