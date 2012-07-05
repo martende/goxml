@@ -13,7 +13,8 @@
 	},
 	'xmlParserCtxtPtr' => {
 		'goType'=>'*XmlParserCtxt',
-		'cConverter' => '%s.handler'
+		'cConverter' => '%s.handler',
+		'export_as' => '_xmlParserCtxt'
 		#'cType'
 	},
 	
@@ -31,7 +32,7 @@
 		
 	}	
 );
-
+use GCC::TranslationUnit;
 use Data::Dumper;
 $CFLAGS = `pkg-config --cflags libxml-2.0`;
 chomp($CFLAGS);
@@ -92,7 +93,7 @@ sub process_enums {
 	print FH $content;
 	close(FH);
 	unlink "$TMP/tags";
-	my $sys = "anjuta-tags --fields=iKST -o $TMP/tags  $TMP/t.h";
+	my $sys = "anjuta-tags --fields=iKSTs -o $TMP/tags  $TMP/t.h";
 	#print $sys."\n";
 	system($sys);
 	
@@ -109,9 +110,19 @@ sub process_enums {
 		if ($type eq 'enumerator') {
 			push @vals,$name;
 		}
+		elsif ($type eq 'struct' and exists $EXPORTED_TYPES{$name}) {	
+			foreach my $ssearch(@d) {
+				chomp $ssearch;
+				my ($name2,undef,$re,$type,$sig,undef)  = split /\t/,$ssearch;
+				if ($type eq 'member' and $sig eq "struct:$name") {
+					#print $ssearch ."\n";
+				}
+			}
+		}
 	}
 	return \@vals;
 }
+
 
 sub process_functions {
 	my $content = shift;	
@@ -250,7 +261,7 @@ sub process {
 	
 	for (my $i=0;$i<$max;$i++) {
 		next unless (exists $funcfilter{$functions->[$i]->{name}});
-		print Dumper($functions->[$i]);
+		#print Dumper($functions->[$i]);
 		push @funcs ,&compile_function($functions->[$i]);
 	}
 	my $out_data = 
@@ -275,12 +286,73 @@ import "C"
 	#print @d;
 }
 
+sub process_types {
+	my $f = shift;
+	open FH,">$TMP/t.c";
+	#foreach (@$f) {
+	#	print FH "#include \"$_\"\n";
+	#}
+	print FH '
+int kokoshnichek=2;
+struct _xmlParserCtxt {
+int kotenka; 
+};
+typedef struct _xmlParserCtxt xmlParserCtxt;
+xmlParserCtxt mimimishka;
+main(){};
+';
+# typedef struct _xmlParserCtxt xmlParserCtxt;
+#;
+	close(FH);
+	unlink("$TMP/t.c.001t.tu");
+	my $cmd = "cd $TMP/;gcc -fdump-translation-unit  $CFLAGS t.c";
+	#print $cmd ;
+	system($cmd);
+	
+	my $node = GCC::TranslationUnit::Parser->parsefile("$TMP/t.c.001t.tu")->root;
+	
+	while($node) {
+		#print $node->name->identifier ."\t" . $node->source . "\n";
+		next if ($node->source eq '<built-in>:0' or ! $node->source);
+		print "NODE  " . ref $node ;
+		print "\n";
+		if( $node->isa('GCC::Node::function_decl') and $node->name) {
+			printf "%s declared in %s\n",
+			$node->name->identifier, $node->source;
+		}
+		if( $node->isa('GCC::Node::var_decl') and $node->name) {
+			if ($node->name->identifier eq 'mimimishka') {
+				#if ( $node->name->identifier
+				#delete $node->{init};
+				delete $node->{chan};
+				#delete $node->{type}->{name}->{chan};
+				print Dumper($node);
+			}
+			
+			printf "%s declared in %s %s %s\n",
+			$node->name->identifier, $node->source, $node->type->name->name->identifier , $node->type->name->name->{string};
+			
+			#print Dumper($node);
+		}
+		if( $node->isa('GCC::Node::type_decl') and $node->name) {
+		  printf "%s declared in %s\n",
+		  	
+			$node->name->identifier, $node->source;
+		}
+	  } continue {
+		$node = $node->chain;
+	  }
+
+}
+%EXPORTED_TYPES = map {$TYPE_CONVERSIONS{$_}->{export_as}=>$_}  grep {exists $TYPE_CONVERSIONS{$_}->{export_as}} keys %TYPE_CONVERSIONS;
+
 @f= (
-	"/usr/include/libxml2/libxml/tree.h",
+#	"/usr/include/libxml2/libxml/tree.h",
 	"/usr/include/libxml2/libxml/parser.h",
-	"/usr/include/libxml2/libxml/xmlmemory.h",
+#	"/usr/include/libxml2/libxml/xmlmemory.h",
 );
 foreach (@f) {
 	&process($_);
 }
 
+&process_types(\@f);
