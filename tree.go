@@ -2,8 +2,10 @@ package goxml
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/tree.h>
+#include "test.h"
 */
 import "C"
+import "unsafe"
 
 const XML_ATTRIBUTE_CDATA=C.XML_ATTRIBUTE_CDATA
 const XML_ATTRIBUTE_DECL=C.XML_ATTRIBUTE_DECL
@@ -78,4 +80,9 @@ func XmlAddChild(parent *XmlNode,cur *XmlNode) *XmlNode {
 func XmlFreeDoc(cur *XmlDoc) {
 	c_cur := cur.handler
 	C.xmlFreeDoc(c_cur)
+}
+
+
+func SetUserdata(d interface{}) {
+	C.set_userdata(unsafe.Pointer(&d));
 }

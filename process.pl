@@ -17,7 +17,10 @@
 		'export_as' => 'xmlParserCtxt'
 		#'cType'
 	},
-	
+	'xmlSAXHandlerPtr' => {
+		'goType'=>'*XmlSAXHandler',
+		'cConverter' => 'NULL_OR_HANDLER'
+	},
 	'const char *' => {
 		'goType' => 'string',
 		'cType'=>'C.CString',
@@ -28,10 +31,17 @@
 		#'cType'=>'C.int',
 		'cConverter'=> 'C.int(%s)' ,
 	},
+	#'void *' => {
+	#	'goType' => 'interface[]',
+	#	'cType' => 'unsafe.Pointer',
+	#	#'cConverter'=> 'C.GoBytes(%s,%i)' ,
+	#}
 	'void' => {
 		
 	}	
 );
+
+require 'funcdescs.pl';
 
 %EXPORTED_TYPES = map {$TYPE_CONVERSIONS{$_}->{export_as}=>$_}  
 					grep {exists $TYPE_CONVERSIONS{$_}->{export_as}} 
@@ -175,30 +185,88 @@ sub process_functions {
 	return \@functions;
 }
 
+sub look_in_db {
+	my ($f,$t,$n) = @_;
+	my $s = "$f/$t/$n";
+	for (my $i=0;$i<scalar @FUNC_DESCS;$i+=2) {
+		if ($s eq $FUNC_DESCS[$i]) {
+			return $FUNC_DESCS[$i+1];
+		}
+	}
+	return undef
+}
 
-sub compile_function {
-	my $f = shift;
-	
-	@args = ();
-	foreach (@{$f->{params}}) {
+sub create_func_args_string {
+	my ($retType,$funcName,$params) = @_;
+	my @args = ();
+	foreach (@{$params}) {
 		my ($type,$name) = @{$_};
+		my $dbres = &look_in_db($funcName,$type,$name);
+		if ($dbres) {
+			if ( $dbres =~ /^SKIP/) {
+				next;
+			} else {
+				die "undefined DBRES $dbres ";
+			}
+		}
 		my $goType = $TYPE_CONVERSIONS{$type}->{goType};
 		die "$type not found for func $f->{name}" if (! $goType ) ;
 		push @args,"$name $goType";
 	}
 	
-	die "RetType $f->{retType} not found for func $f->{name}" if (! exists $TYPE_CONVERSIONS{$f->{retType}} ) ;
+	die "RetType $fretType not found for func $funcName" if (! exists $TYPE_CONVERSIONS{$retType} ) ;
 	
-	my $func_str = "func \u$f->{name}(" . join(",",@args) . ")";
-	$func_str.=" " . $TYPE_CONVERSIONS{$f->{retType}}->{goType} if ($f->{retType} ne "void");
+	my $func_str = "func \u$funcName(" . join(",",@args) . ")";
+	$func_str.=" " . $TYPE_CONVERSIONS{$retType}->{goType} if ($retType ne "void");
+	
+	return $func_str; 
+}
+
+sub create_func_input_inits {
+	my ($funcName,$params) = @_;
 	my @content;
+	foreach (@{$params}) {
+		my $cConverter ;
+		my ($type,$name) = @{$_};
+		my $dbres = &look_in_db($funcName,$type,$name);
+		if ($dbres) {
+			if ( $dbres =~ /^SKIP/) {
+				$cConverter  =$';
+				if ($sConverter ) {
+					$cConverter =~s/^\///;
+				} else {
+					$cConverter ='unsafe.Pointer(nil)';
+				}
+			} else {
+				die "undefined DBRES $dbres ";
+			}
+		} else {
+			my $cFormat =  $TYPE_CONVERSIONS{$type}->{cConverter};
+			if ($cFormat eq 'NULL_OR_HANDLER') {
+				push @content,"\tvar c_$name C.$type=nil";
+				push @content,"\tif $name!=nil { c_$name = $name.handler}";
+				next;
+				#$cConverter = sprintf $TYPE_CONVERSIONS{$type}->{cConverter} , $name;
+			} else {
+				$cConverter = sprintf $TYPE_CONVERSIONS{$type}->{cConverter} , $name;
+			}
+		}
+		die "no Sconverter" unless defined $cConverter; 
+		my $line = "\tc_$name := $cConverter";
+		push @content,$line;
+	}
+	return @content;
+}
+
+sub compile_function {
+	my $f = shift;
+	my $funcName = $f->{name};
+	my $retType = $f->{retType};
+	my $params = $f->{params};
 	
-	#foreach (@{$f->{params}}) {
-	#	my ($type,$name) = @{$_};
-	#	my $ctype =  $TYPE_CONVERSIONS{$type}->{cType} || "C.".$type;
-	#	my $line = "\tc_$name :=";
-	#	push @content,$line;
-	#}
+	my $func_str = &create_func_args_string($retType,$funcName,$params);
+	
+	my @content;
 	
 	if (  $f->{retType} ne 'void' ) {
 		if ( $f->{retType}=~/\*$/ ) {
@@ -213,13 +281,9 @@ sub compile_function {
 			die "notimpl2!";
 		}
 	}
+	my @inputs_inits = &create_func_input_inits($funcName,$params);
 	
-	foreach (@{$f->{params}}) {
-		my ($type,$name) = @{$_};
-		$cConverter = sprintf $TYPE_CONVERSIONS{$type}->{cConverter} , $name;
-		my $line = "\tc_$name := $cConverter";
-		push @content,$line;
-	}
+	push @content , @inputs_inits; 
 	
 	my @callargs = ();
 	foreach (@{$f->{params}}) {
@@ -262,7 +326,7 @@ sub process {
 	my @funcs = ();
 	my $max = scalar @$functions;
 	#$max = 2;
-	%funcfilter = map{$_=>1} ('xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile');
+	%funcfilter = map{$_=>1} ('xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile','xmlCreatePushParserCtxt');
 	
 	if ($ARGV[0]) {
 		%funcfilter = map{$_=>1} @ARGV;
@@ -280,6 +344,8 @@ sub process {
 #include <'.$include_path.'>
 */
 import "C"
+
+import "unsafe"
 ';
 	if (scalar @{$enums}) {
 		$out_data.= "\n";

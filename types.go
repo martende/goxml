@@ -10,6 +10,10 @@ type XmlNode struct {
 type XmlDoc struct {
 	handler C.xmlDocPtr
 }
+
+type XmlSAXHandler struct {
+	handler C.xmlSAXHandlerPtr
+}
 /*
 type XmlParserCtxt struct {
 	handler C.xmlParserCtxtPtr

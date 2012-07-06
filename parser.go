@@ -5,6 +5,8 @@ package goxml
 */
 import "C"
 
+import "unsafe"
+
 const XML_PARSER_ATTRIBUTE_VALUE=C.XML_PARSER_ATTRIBUTE_VALUE
 const XML_PARSER_CDATA_SECTION=C.XML_PARSER_CDATA_SECTION
 const XML_PARSER_COMMENT=C.XML_PARSER_COMMENT
@@ -85,6 +87,20 @@ const XML_WITH_XPTR=C.XML_WITH_XPTR
 const XML_WITH_ZLIB=C.XML_WITH_ZLIB
 func XmlCleanupParser() {
 	C.xmlCleanupParser()
+}
+
+func XmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,size int,filename string) *XmlParserCtxt {
+	var c_ret C.xmlParserCtxtPtr
+	g_ret := &XmlParserCtxt{}
+	var c_sax C.xmlSAXHandlerPtr=nil
+	if sax!=nil { c_sax = sax.handler}
+	c_user_data := unsafe.Pointer(nil)
+	c_chunk := C.CString(chunk)
+	c_size := C.int(size)
+	c_filename := C.CString(filename)
+	c_ret = C.xmlCreatePushParserCtxt(c_sax,c_user_data,c_chunk,c_size,c_filename)
+	g_ret.handler = c_ret
+	return g_ret
 }
 
 func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options int) *XmlDoc {
