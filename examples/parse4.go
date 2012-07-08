@@ -34,33 +34,25 @@ func example4Func(filename string,desc *os.File) {
     }
 
     for {
-    	_,err:=desc.Read(chars);
+    	cnt,err:=desc.Read(chars);
     	if err!=nil {
 	    	if err == io.EOF {
+	    		XmlParseChunk(ctxt, string(chars), cnt, 0);
                 break
             }
     		fmt.Fprintf(os.Stderr,"Failed to goparse %s %s\n", filename,err)
     		return
     	}
+    	XmlParseChunk(ctxt, string(chars), cnt, 0);
     }
-    /*
-    while ((res = readPacket(chars, 4)) > 0) {
-        xmlParseChunk(ctxt, chars, res, 0);
+    doc := ctxt.GetMyDoc()
+  	res := ctxt.GetWellFormed()  
+    XmlFreeDoc(doc)
+    
+    if (res==0) {
+        fmt.Fprintf(os.Stderr, "Failed to parse %s\n", filename);
     }
-
-    xmlParseChunk(ctxt, chars, 0, 1);
-
-    doc = ctxt->myDoc;
-    res = ctxt->wellFormed;
-    xmlFreeParserCtxt(ctxt);
-
-    if (!res) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
-    }
-
-    xmlFreeDoc(doc);
-    */
-
+    
 }
 
 func main() {

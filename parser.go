@@ -128,6 +128,18 @@ func XmlNewParserCtxt() *XmlParserCtxt {
 	return g_ret
 }
 
+func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
+	var c_ret C.int
+	var g_ret int
+	c_ctxt := ctxt.handler
+	c_chunk := C.CString(chunk)
+	c_size := C.int(size)
+	c_terminate := C.int(terminate)
+	c_ret = C.xmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
+	g_ret = int(c_ret)
+	return g_ret
+}
+
 func XmlReadFile(URL string,encoding string,options int) *XmlDoc {
 	var c_ret C.xmlDocPtr
 	g_ret := &XmlDoc{}

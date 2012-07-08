@@ -5,6 +5,8 @@ package goxml
 */
 import "C"
 
+import "unsafe"
+
 func XmlMemoryDump() {
 	C.xmlMemoryDump()
 }

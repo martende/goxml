@@ -1,5 +1,18 @@
 #!/usr/bin/perl
 
+
+@IMPORTS = (
+	'xmlTextReaderConstName',
+	'xmlTextReaderConstValue',
+	'xmlTextReaderDepth',
+	'xmlTextReaderNodeType',
+	'xmlTextReaderRead',
+	'xmlTextReaderIsEmptyElement',
+	'xmlTextReaderHasValue',
+	'xmlReaderForFile','xmlParseChunk','xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile','xmlCreatePushParserCtxt');
+%TYPE_ALIASES = (
+	'xmlDoc*' => 'xmlDocPtr'
+);
 %TYPE_CONVERSIONS = (
 	'xmlNodePtr' => {
 		'goType'=>'*XmlNode',
@@ -21,6 +34,10 @@
 		'goType'=>'*XmlSAXHandler',
 		'cConverter' => 'NULL_OR_HANDLER'
 	},
+	'xmlTextReaderPtr' => {
+		'goType'=>'*XmlTextReader',
+		'cConverter' => '%s.handler'
+	},
 	'const char *' => {
 		'goType' => 'string',
 		'cType'=>'C.CString',
@@ -30,6 +47,11 @@
 		'goType' => 'int',
 		#'cType'=>'C.int',
 		'cConverter'=> 'C.int(%s)' ,
+	},
+	'const xmlChar*' => {
+		'goType' => 'string',
+		'cType'=>'*C.char',
+		'cConverter'=> 'C.CString(%s)' 
 	},
 	#'void *' => {
 	#	'goType' => 'interface[]',
@@ -174,6 +196,7 @@ sub process_functions {
 					push @params , [$k,$v];
 				}
 			}
+			$returntype=~s/^const([^ ])/const $1/;
 			push @functions,{
 				name => $funcName,
 				retType => $returntype,
@@ -214,7 +237,7 @@ sub create_func_args_string {
 		push @args,"$name $goType";
 	}
 	
-	die "RetType $fretType not found for func $funcName" if (! exists $TYPE_CONVERSIONS{$retType} ) ;
+	die "RetType $retType not found for func $funcName" if (! exists $TYPE_CONVERSIONS{$retType} ) ;
 	
 	my $func_str = "func \u$funcName(" . join(",",@args) . ")";
 	$func_str.=" " . $TYPE_CONVERSIONS{$retType}->{goType} if ($retType ne "void");
@@ -268,17 +291,19 @@ sub compile_function {
 	
 	my @content;
 	
-	if (  $f->{retType} ne 'void' ) {
-		if ( $f->{retType}=~/\*$/ ) {
-			die "notimpl1!";
+	my $goRetType = $TYPE_CONVERSIONS{$retType}->{goType};
+	
+	if (  $retType ne 'void' ) {
+		if ( exists $TYPE_CONVERSIONS{$retType}->{cType}) {
+			push @content,"\tvar c_ret $TYPE_CONVERSIONS{$retType}->{cType}";
 		} else {
-			push @content,"\tvar c_ret C.$f->{retType}";
-		}
-		if ( $TYPE_CONVERSIONS{$f->{retType}}->{goType}=~/^*\s*(\w+)$/ ) {
+			push @content,"\tvar c_ret C.$retType";
+		}	 
+		if ( $goRetType =~/^\*\s*(\w+)$/ ) {
 			my $rt = $1;
 			push @content,"\tg_ret := &$rt\{\}";
 		} else {
-			die "notimpl2!";
+			push @content,"\tvar g_ret $goRetType";
 		}
 	}
 	my @inputs_inits = &create_func_input_inits($funcName,$params);
@@ -297,13 +322,17 @@ sub compile_function {
 	}
 	push @content,"\t".$callline;
 	
-	if ($f->{retType} ne "void") {
-		if ( $TYPE_CONVERSIONS{$f->{retType}}->{goType}=~/^*\s*(\w+)$/ ) {
+	if ($retType ne "void") {
+		if ($goRetType eq 'string') {
+			push @content, "\tg_ret = C.GoString(c_ret)";
+		} elsif ( $goRetType=~/^\*\s*(\w+)$/ ) {
 			#my $rt = $1;
 			my $f = sprintf $TYPE_CONVERSIONS{$f->{retType}}->{cConverter} , 'g_ret';
 			push @content, "\t$f = c_ret";
-			push @content,"\treturn g_ret";
+		} else {
+			push @content, "\tg_ret = $goRetType(c_ret)";
 		}
+		push @content,"\treturn g_ret";
 	}
 	
 	$func_str.= " {\n" . join("\n",@content) . "\n}\n";
@@ -326,7 +355,8 @@ sub process {
 	my @funcs = ();
 	my $max = scalar @$functions;
 	#$max = 2;
-	%funcfilter = map{$_=>1} ('xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile','xmlCreatePushParserCtxt');
+	
+	%funcfilter = map{$_=>1} @IMPORTS;
 	
 	if ($ARGV[0]) {
 		%funcfilter = map{$_=>1} @ARGV;
@@ -446,17 +476,35 @@ sub create_go_struct {
 	my $gotype = $TYPE_CONVERSIONS{$EXPORTED_TYPES{$t}}->{goType};
 	$gotype =~s/^\*//;
 	my $ctype = $EXPORTED_TYPES{$t};
-	$content .= "type $gotype struct {\n";
-	$content .= "\thandler C.$ctype\n";
-	$content .= "}\n";
+	my $declaration = "";
+	
 	foreach (@$s) {
 		my ($name,$type) = @{$_};
 		my $goftype = $type;
+		if (exists $TYPE_ALIASES{$type}) {
+			$goftype = $TYPE_ALIASES{$type};
+		}
+		if (exists $TYPE_CONVERSIONS{$goftype}) {
+			$goftype = $TYPE_CONVERSIONS{$goftype}->{goType};
+		}
+		
 		my $inner = "func (this *$gotype) Get\u$name() $goftype {\n";
 		my $found = 0;
-		if ( $type eq 'int') {
+		if ( $goftype eq 'int') {
 			$inner .= "\treturn int(this.handler.$name)\n";
 			$found = 1;
+		} elsif ($goftype=~/^\*(\w+)$/) {
+			my $rt = $1;
+			$found = 1;
+			$inner.= "\tif this.handler.$name == nil {\n";
+			$inner.= "\t\treturn nil\n";
+			$inner.= "\t}\n";
+			$inner.= "\tif this._$name == nil {\n";
+			$inner.= "\t\tthis._$name = &$rt\{\}\n";
+			$inner.= "\t}\n";
+			$inner.= "\tthis._$name.handler = this.handler.$name\n";
+			$inner .= "\treturn this._$name\n";
+			push @addon_types , "\t_$name $goftype"
 		}
 		$inner .= "}\n";
 		if ( $found ) {
@@ -465,6 +513,14 @@ sub create_go_struct {
 			$content .= "/*\n$inner*/\n";
 		}
 	}
+	$declaration .= "type $gotype struct {\n";
+	$declaration .= "\thandler C.$ctype\n";
+	if ( scalar @addon_types) {
+		$declaration .= join "\n"  , @addon_types;
+		$declaration .="\n";
+	}
+	$declaration .= "}";
+	$content = "$declaration\n$content";
 	return $content;
 }
 sub process_types {
@@ -609,9 +665,10 @@ sub parse_tu_node {
 }
 
 @f= (
-#	"/usr/include/libxml2/libxml/tree.h",
+	"/usr/include/libxml2/libxml/tree.h",
 	"/usr/include/libxml2/libxml/parser.h",
-#	"/usr/include/libxml2/libxml/xmlmemory.h",
+	"/usr/include/libxml2/libxml/xmlreader.h",
+	"/usr/include/libxml2/libxml/xmlmemory.h",
 );
 foreach (@f) {
 	&process($_);

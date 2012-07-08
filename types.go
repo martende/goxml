@@ -2,6 +2,7 @@ package goxml
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/tree.h>
+#include <libxml/xmlreader.h>
 */
 import "C"
 type XmlNode struct {
@@ -13,6 +14,9 @@ type XmlDoc struct {
 
 type XmlSAXHandler struct {
 	handler C.xmlSAXHandlerPtr
+}
+type XmlTextReader struct {
+	handler C.xmlTextReaderPtr
 }
 /*
 type XmlParserCtxt struct {
