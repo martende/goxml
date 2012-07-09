@@ -399,12 +399,12 @@ class FileConverter():
 
 
 			
-		#p = CParser(TMP + "/" + self.filename + ".h",cache=TMP + "/" + self.filename + ".cache",macros={'XMLCALL': ''})
-		mk = {'XMLCALL': '',
+		p = CParser(TMP + "/" + self.filename + ".h",cache=TMP + "/" + self.filename + ".cache",macros={'XMLCALL': ''})
+		#mk = {'XMLCALL': '',
 		#'LIBXML_PUSH_ENABLED':1
-		}
+		#}
 		
-		p = CParser(["/tmp/tmp1/parser.h.h"],cache=TMP + "/" + self.filename + ".cache",macros=mk)
+		#p = CParser(["/tmp/tmp1/parser.h.h"],cache=TMP + "/" + self.filename + ".cache",macros=mk)
 		
 		
 		varsdict = {
