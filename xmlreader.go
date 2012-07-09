@@ -6,7 +6,7 @@ package goxml
 import "C"
 
 import "unsafe"
-
+ 
 const XML_PARSER_DEFAULTATTRS=C.XML_PARSER_DEFAULTATTRS
 const XML_PARSER_LOADDTD=C.XML_PARSER_LOADDTD
 const XML_PARSER_SEVERITY_ERROR=C.XML_PARSER_SEVERITY_ERROR
@@ -39,6 +39,11 @@ const XML_TEXTREADER_MODE_ERROR=C.XML_TEXTREADER_MODE_ERROR
 const XML_TEXTREADER_MODE_INITIAL=C.XML_TEXTREADER_MODE_INITIAL
 const XML_TEXTREADER_MODE_INTERACTIVE=C.XML_TEXTREADER_MODE_INTERACTIVE
 const XML_TEXTREADER_MODE_READING=C.XML_TEXTREADER_MODE_READING
+func XmlFreeTextReader(reader *XmlTextReader) {
+	c_reader := reader.handler
+	C.xmlFreeTextReader(c_reader)
+}
+
 func XmlReaderForFile(filename string,encoding string,options int) *XmlTextReader {
 	var c_ret C.xmlTextReaderPtr
 	g_ret := &XmlTextReader{}
@@ -54,9 +59,8 @@ func XmlTextReaderConstName(reader *XmlTextReader) string {
 	var c_ret *C.char
 	var g_ret string
 	c_reader := reader.handler
-	c_ret = C.xmlTextReaderConstName(c_reader)
+	c_ret = (*C.char)(unsafe.Pointer(C.xmlTextReaderConstName(c_reader)))
 	g_ret = C.GoString(c_ret)
-
 	return g_ret
 }
 
@@ -64,9 +68,8 @@ func XmlTextReaderConstValue(reader *XmlTextReader) string {
 	var c_ret *C.char
 	var g_ret string
 	c_reader := reader.handler
-	c_ret = C.xmlTextReaderConstValue(c_reader)
+	c_ret = (*C.char)(unsafe.Pointer(C.xmlTextReaderConstValue(c_reader)))
 	g_ret = C.GoString(c_ret)
-
 	return g_ret
 }
 

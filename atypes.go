@@ -5,6 +5,8 @@ package goxml
 #include <libxml/parser.h>
 #include <libxml/xmlreader.h>
 #include <libxml/xmlmemory.h>
+#include <libxml/xmlstring.h>
+#include <libxml/HTMLparser.h>
 */
 import "C"
 type XmlParserCtxt struct {

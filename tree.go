@@ -5,7 +5,6 @@ package goxml
 */
 import "C"
 
-import "unsafe"
 
 const XML_ATTRIBUTE_CDATA=C.XML_ATTRIBUTE_CDATA
 const XML_ATTRIBUTE_DECL=C.XML_ATTRIBUTE_DECL

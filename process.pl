@@ -2,6 +2,10 @@
 
 
 @IMPORTS = (
+	'UTF8ToHtml',
+	'xmlMemBlocks',
+	'xmlStrlen',
+	'xmlFreeTextReader',
 	'xmlTextReaderConstName',
 	'xmlTextReaderConstValue',
 	'xmlTextReaderDepth',
@@ -51,7 +55,21 @@
 	'const xmlChar*' => {
 		'goType' => 'string',
 		'cType'=>'*C.char',
-		'cConverter'=> 'C.CString(%s)' 
+		#'cConverter'=> 'C.CString(%s)' 
+	},
+	'const xmlChar *' => {
+		'goType' => 'string',
+		#'cType'=>'*C.xmlChar',
+		'cConverter'=> '(*C.xmlChar)(unsafe.Pointer(C.CString(%s)))' 
+	},
+	'unsigned char *' => {
+		'goType' => string,
+	},
+	'const unsigned char *' => {
+		'goType' => string,
+	},
+	'int *' => {
+		'goType' => 'int',
 	},
 	#'void *' => {
 	#	'goType' => 'interface[]',
@@ -233,7 +251,7 @@ sub create_func_args_string {
 			}
 		}
 		my $goType = $TYPE_CONVERSIONS{$type}->{goType};
-		die "$type not found for func $f->{name}" if (! $goType ) ;
+		die "$type not found for func $funcName param $name" if (! $goType ) ;
 		push @args,"$name $goType";
 	}
 	
@@ -246,7 +264,7 @@ sub create_func_args_string {
 }
 
 sub create_func_input_inits {
-	my ($funcName,$params) = @_;
+	my ($f,$funcName,$params) = @_;
 	my @content;
 	foreach (@{$params}) {
 		my $cConverter ;
@@ -258,6 +276,7 @@ sub create_func_input_inits {
 				if ($sConverter ) {
 					$cConverter =~s/^\///;
 				} else {
+					$f->{_unsafe}=1;
 					$cConverter ='unsafe.Pointer(nil)';
 				}
 			} else {
@@ -276,6 +295,9 @@ sub create_func_input_inits {
 		}
 		die "no Sconverter" unless defined $cConverter; 
 		my $line = "\tc_$name := $cConverter";
+		if ( $cConverter =~/unsafe\./) {
+			$f->{_unsafe}=1;
+		}
 		push @content,$line;
 	}
 	return @content;
@@ -285,7 +307,7 @@ sub compile_function {
 	my $f = shift;
 	my $funcName = $f->{name};
 	my $retType = $f->{retType};
-	my $params = $f->{params};
+	my $params = $f->{params}; 
 	
 	my $func_str = &create_func_args_string($retType,$funcName,$params);
 	
@@ -306,7 +328,7 @@ sub compile_function {
 			push @content,"\tvar g_ret $goRetType";
 		}
 	}
-	my @inputs_inits = &create_func_input_inits($funcName,$params);
+	my @inputs_inits = &create_func_input_inits($f,$funcName,$params);
 	
 	push @content , @inputs_inits; 
 	
@@ -317,9 +339,19 @@ sub compile_function {
 	}
 	my $callline = "C." .$f->{name} . "(" . join(",",@callargs) . ")";
 	
+	
+		
+	
+		
 	if ($f->{retType} ne "void") {
-		$callline = "c_ret = " . $callline;
+		if ($goRetType eq 'string') {
+			$f->{_unsafe} = 1;
+			$callline = "c_ret = (*C.char)(unsafe.Pointer(" . $callline . "))";
+		} else {
+			$callline = "c_ret = " . $callline;
+		}
 	}
+	
 	push @content,"\t".$callline;
 	
 	if ($retType ne "void") {
@@ -328,6 +360,7 @@ sub compile_function {
 		} elsif ( $goRetType=~/^\*\s*(\w+)$/ ) {
 			#my $rt = $1;
 			my $f = sprintf $TYPE_CONVERSIONS{$f->{retType}}->{cConverter} , 'g_ret';
+
 			push @content, "\t$f = c_ret";
 		} else {
 			push @content, "\tg_ret = $goRetType(c_ret)";
@@ -344,6 +377,7 @@ sub process {
 	my $f = shift;
 	my ($include_path) = $f=~/(libxml\/\w+\.h)$/;
 	my ($file_path) = $f=~/(\w+\.h)$/;
+	my $unsafe  = 0;
 	$file_path =~s/\.h$/.go/;
 	my $content = `gcc -E $CFLAGS $f`;
 	
@@ -366,6 +400,9 @@ sub process {
 		next unless (exists $funcfilter{$functions->[$i]->{name}});
 		#print Dumper($functions->[$i]);
 		push @funcs ,&compile_function($functions->[$i]);
+		if (exists  $functions->[$i]->{_unsafe} ) {
+			$unsafe = 1;
+		}
 	}
 	my $out_data = 
 'package goxml
@@ -375,8 +412,8 @@ sub process {
 */
 import "C"
 
-import "unsafe"
 ';
+	$out_data .= "import \"unsafe\"\n "if ( $unsafe ); 
 	if (scalar @{$enums}) {
 		$out_data.= "\n";
 		$out_data.= join "\n",map {"const $_=C.$_" } @{$enums};
@@ -440,7 +477,7 @@ sub process_xml_types {
 	}
 	$content .= "}\n";
 	my $v = &process_types($content,$types);
-	#print Dumper($v);
+	
 	#print &create_C_struct("xmlParserCtxt",$v->{xmlParserCtxt});
 	$content = 'package goxml
 /*
@@ -574,6 +611,7 @@ sub restore_type {
 	my @fields ; 
 	foreach my $el (@$tu) {
 		if ( $el->{TYPE} eq 'var_decl' and $el->{name}->{strg} eq $varname) {
+			
 			# $el->{type}->{name}->{name}->{strg} eq $type
 			my $el_name = $el->{name}->{strg};
 			#if ( $el->{type}->{TYPE} eq 'record_type'
@@ -583,12 +621,13 @@ sub restore_type {
 			
 			my $field = $el->{type}->{flds};
 			while ( $field) {
+				
 				die "NO field_decl" unless ( $field->{TYPE} eq 'field_decl') ;
 				
 				my $name = $field->{name}->{strg};
 				my $type = &resrore_type_desc($field->{type});
 				#print Dumper($field->{type});
-				$field = $field->{chan};
+				$field = $field->{chain};
 				
 				push @fields , [$name , $type];
 			}
@@ -669,7 +708,10 @@ sub parse_tu_node {
 	"/usr/include/libxml2/libxml/parser.h",
 	"/usr/include/libxml2/libxml/xmlreader.h",
 	"/usr/include/libxml2/libxml/xmlmemory.h",
+	"/usr/include/libxml2/libxml/xmlstring.h",
+	"/usr/include/libxml2/libxml/HTMLparser.h"
 );
+
 foreach (@f) {
 	&process($_);
 }

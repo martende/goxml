@@ -15,6 +15,7 @@ type XmlDoc struct {
 type XmlSAXHandler struct {
 	handler C.xmlSAXHandlerPtr
 }
+
 type XmlTextReader struct {
 	handler C.xmlTextReaderPtr
 }

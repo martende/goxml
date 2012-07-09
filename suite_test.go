@@ -10,3 +10,4 @@ type S struct{}
 func TestAll(t *testing.T) { TestingT(t) }
 
 var _ = Suite(&S{})
+

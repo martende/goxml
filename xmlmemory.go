@@ -5,7 +5,14 @@ package goxml
 */
 import "C"
 
-import "unsafe"
+
+func XmlMemBlocks() int {
+	var c_ret C.int
+	var g_ret int
+	c_ret = C.xmlMemBlocks()
+	g_ret = int(c_ret)
+	return g_ret
+}
 
 func XmlMemoryDump() {
 	C.xmlMemoryDump()
