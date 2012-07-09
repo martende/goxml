@@ -5,19 +5,19 @@ package goxml
 #include <libxml/xmlreader.h>
 */
 import "C"
+
 type XmlNode struct {
 	handler C.xmlNodePtr
 }
-type XmlDoc struct {
-	handler C.xmlDocPtr
-}
 
-type XmlSAXHandler struct {
-	handler C.xmlSAXHandlerPtr
-}
 
 type XmlTextReader struct {
 	handler C.xmlTextReaderPtr
+}
+
+
+type XmlDict struct {
+	handler C.xmlDictPtr
 }
 /*
 type XmlParserCtxt struct {

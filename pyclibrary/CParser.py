@@ -789,7 +789,7 @@ class CParser():
         self.structDecl = self.structType + semi
 
         ## enum definition
-        enumVarDecl = Group(ident('name')  + Optional(Literal('=').suppress() + (integer('value') | ident('valueName'))))
+        enumVarDecl = Group(ident('name')  + Optional(Literal('=').suppress() + (integer('value') | ident('valueName')  )))
         
         self.enumType << Keyword('enum') + (Optional(ident)('name') + lbrace + Group(delimitedList(enumVarDecl))('members') + Optional(",") + rbrace | ident('name'))
         self.enumType.setParseAction(self.processEnum)
