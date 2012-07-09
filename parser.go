@@ -725,6 +725,33 @@ func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options
 	return &XmlDoc{handler:c_ret}
 }
 /* 
+	   Function: xmlParseChunk
+	   ReturnType: int
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
+*/
+func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
+	var c_ctxt C.xmlParserCtxtPtr=nil ;if ctxt !=nil { c_ctxt = ctxt.handler }
+	c_chunk:= C.CString(chunk)
+	c_size := C.int(size)
+	c_terminate := C.int(terminate)
+	c_ret := C.xmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
+	return int(c_ret)
+}
+/* 
+	   Function: xmlCreatePushParserCtxt
+	   ReturnType: xmlParserCtxtPtr
+	   Args: (('sax', ['xmlSAXHandlerPtr'], None), ('user_data', ['void', '*'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('filename', ['char', '*'], None))
+*/
+func XmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,size int,filename string) *XmlParserCtxt {
+	var c_sax C.xmlSAXHandlerPtr=nil ;if sax !=nil { c_sax = sax.handler }
+	c_chunk:= C.CString(chunk)
+	c_size := C.int(size)
+	c_filename:= C.CString(filename)
+	c_ret := C.xmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename)
+	if c_ret == nil {return nil}
+	return &XmlParserCtxt{handler:c_ret}
+}
+/* 
 	   Function: xmlNewParserCtxt
 	   ReturnType: xmlParserCtxtPtr
 	   Args: ((None, ['void'], None),)

@@ -6,7 +6,7 @@ import re
 import optparse
 
 FUNC_DESCS = (
-	('f','xmlCreatePushParserCtxt','void *','user_data'),('SKIP',),
+	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
 	('s','xmlDocPtr',None,'ids'),('PRIVATE'),
 	('s','xmlDocPtr',None,'refs'),('PRIVATE'),
@@ -184,6 +184,8 @@ class FileConverter():
 				dbData = lookInDb('f',fname,ptype,pname)
 				goArgType = None
 				if dbData:
+					if 'SKIP' in dbData:
+						continue
 					raise ('Not implemented')
 				else:
 					try:
@@ -209,6 +211,8 @@ class FileConverter():
 				dbData = lookInDb('f',fname,ptype,pname)
 				go2cConvert = None
 				if dbData:
+					if 'SKIP' in dbData:
+						continue
 					raise ('Not implemented')
 				try:
 					go2cConvert = TYPEINFO[ptype]['go2cConverter']
@@ -227,6 +231,14 @@ class FileConverter():
 		outs = []
 		callargs = []
 		for (pname,ptype,_) in sig[1]:
+			ptype = "".join(ptype)
+			dbData = lookInDb('f',fName,ptype,pname)
+			if dbData:
+				if 'SKIP' in dbData:
+					callargs.append("nil")
+					continue
+				else:
+					raise ('Not implemented')
 			if pname is not None:
 				callargs.append("c_" + pname)
 		callLine = 'C.' + fName + "(" + ",".join(callargs)+")"
@@ -385,28 +397,32 @@ class FileConverter():
 					break
 		return ss
 	def processFile(self):
+		replace = {}
 		if True:
 			f=open(self.include,"r")
 			s = f.read()
-			s = re.sub("\s+(\d+)<<(\d+)(,?)",lambda x:str(int(x.group(1))<<int(x.group(2)))+ x.group(3),s)  
-			#s = re.sub("\s+(\d+)<<(\d+),",lambda x: x.group(1) + "    <->     " + x.group(2),s)
-			f.close()
-			f = open(TMP + "/" + self.filename + ".h","w")
-			f.write(s)
-			f.close()
-			(mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime)  = os.stat(self.include)
-			os.utime(TMP + "/" + self.filename + ".h", (atime,mtime))
+			s = re.findall("(\s+(\d+)<<(\d+)(,?))",s)
+			for r in s:
+				replace[r[0]] = str(int(r[1]) << int(r[2]) ) +  r[3] 
 
-
-			
-		p = CParser(TMP + "/" + self.filename + ".h",cache=TMP + "/" + self.filename + ".cache",macros={'XMLCALL': ''})
+		p = CParser(
+			# TMP + "/" + self.filename + ".h",
+			self.include,
+			cache=TMP + "/" + self.filename + ".cache",
+			replace  = replace,	
+			#replace = {"\s+(\d+)<<(\d+)(,?)" : lambda x:str(int(x.group(1))<<int(x.group(2)))+ x.group(3)},
+			macros={
+				'XMLCALL': '',
+				'LIBXML_PUSH_ENABLED':1
+			}
+		)
 		#mk = {'XMLCALL': '',
 		#'LIBXML_PUSH_ENABLED':1
 		#}
 		
 		#p = CParser(["/tmp/tmp1/parser.h.h"],cache=TMP + "/" + self.filename + ".cache",macros=mk)
 		
-		
+				
 		varsdict = {
 			'filename' : self.filename,
 			'unsafe_import' : '',
