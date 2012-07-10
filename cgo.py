@@ -5,23 +5,52 @@ import sys
 import re
 import optparse
 
-def calc_len(param):
+def calc_len(param,mul=1):
 	def w(n,t):
 		if t[-1]=='*':
-			s = "\tc0_%(n)s:=C.int(len(%(p)s)+1)\n\tc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t}
+			s = "\tc0_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)\n\tc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t,'mul':mul}
 		return s
 	return w
+def create_buffer_as(param,mul=1):
+	def w(n,t):
+		#if t[-1]=='*':
+		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":go2c(t)}
+		return s
+	return w
+def return_mapper(p1,p2):
+	class t:
+		def arg(self):
+			return p1
+		def okVal(self):
+			return 0
+		def errArg(self):
+			return p2
+		def getReturnTuple(self,argCType,cReturnType):
+			return (("g_"+p1,TYPEINFO[argCType]['goArgType']),("err","error"))
+		def getReturnType(self,argCType,cReturnType):
+			return "(g_"+p1+" " + TYPEINFO[argCType]['goArgType'] + ",err error)"
+			
+	def w(n,t):
+		#if t[-1]=='*':
+		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":go2c(t)}
+		return s
+	
+	return t()
+		
 FUNC_DESCS = (
 	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
-	('f','UTF8ToHtml',None,'out'),('RETYPE','__string_ucharptr'),
+#	('f','UTF8ToHtml',None,'out'),('RETYPE','__string_ucharptr'),
 	('f','UTF8ToHtml',None,'inlen'),('CALC',calc_len('in')),
-	
+	('f','UTF8ToHtml',None,'outlen'),('CALC',calc_len('in',3)),
+	('f','UTF8ToHtml',None,'out'),('CALC',create_buffer_as('in',3)),
+	('r','UTF8ToHtml',None,None),('CALC',return_mapper('out','ret')),
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
 	('s','xmlDocPtr',None,'ids'),('PRIVATE'),
 	('s','xmlDocPtr',None,'refs'),('PRIVATE'),
 	('s','xmlDocPtr',None,'psvi'),('PRIVATE'),
 	('s','xmlDtdPtr','void*',None),('PRIVATE'),
+	('s','htmlElemDescPtr','char',None),('RETYPE','__bool'),
 	('s',None,'void*','userData'),('PRIVATE'),
 	('s',None,None,'type'),('PRIVATE'),
 	('s',None,None,'_private'),('PRIVATE'),
@@ -29,23 +58,26 @@ FUNC_DESCS = (
 	('s',None,'int*',None),('PRIVATE'),
 	
 )
-getHandler =  lambda n,t:"\tc_%s := %s.handler" % (n,n)
-getConverter = lambda n,t:'\tc_%s := C.%s(%s)' % (n,t,n)
+getHandler =  lambda n,t:"c_%s := %s.handler" % (n,n)
+getConverter = lambda n,t:'c_%s := C.%s(%s)' % (n,t,n)
 
 # The standard C numeric types are available under the names C.char, C.schar (signed char), 
 # C.uchar (unsigned char), C.short, C.ushort (unsigned short), C.int, C.uint (unsigned int), C.long, C.ulong (unsigned long), C.longlong (long long), C.ulonglong (unsigned long long), C.float, C.double. 
 # The C type void* is represented by Go's unsafe.Pointer.
-def go2c(t):
+def c2goc(t):
 	return {
 		'unsigned char*' : "*C.uchar",
 		'char*' : "*C.char",
+		'xmlChar*' : "*C.xmlChar"
 	}.get(t)
 	
 def toCharConverter(n,t):
-	return """\tc_%s:= (%s)(unsafe.Pointer(C.CString(%s)))""" % (n,go2c(t),n)
+	return """c_%(n)s:= (%(t)s)(unsafe.Pointer(C.CString(%(n)s)))
+defer C.free(unsafe.Pointer(c_%(n)s))""" % {'n':n,'t':c2goc(t)}
 
 def getNullOrHandler(n,t): 
-	return """\tvar c_%(n)s C.%(t)s=nil ;if %(n)s !=nil { c_%(n)s = %(n)s.handler }""" % {'n':n,'t':t}
+	return """var c_%(n)s C.%(t)s=nil
+if %(n)s !=nil { c_%(n)s = %(n)s.handler }""" % {'n':n,'t':t}
 
 #
 # returnConverter
@@ -53,9 +85,18 @@ def getNullOrHandler(n,t):
 def retNullOrObject(t,goRetType):
 	return 'if c_ret == nil {return nil}\n\treturn &%s{handler:c_ret}' % goRetType  
 def retObject(t,goRetType):
-	return "return %s(c_ret)" % t
+	return "return %s(c_ret)" % goRetType
 def retString(t,goRetType):
 	return "if c_ret == nil {return \"\"}\n\tg_ret:=C.GoString((*C.char)(unsafe.Pointer(c_ret)))\n\treturn g_ret" 
+
+# Converters
+
+def c_cchar2string(vName,cName):
+	return """if %(i)s == nil {
+	%(a)s=""
+} else {
+	%(a)s = C.GoString((*C.char)(unsafe.Pointer(%(i)s)))
+}""" % {"a":vName,"i":cName}
 
 TYPEALIAS = {
 	'struct _xmlNode*' : 'xmlNodePtr',
@@ -65,6 +106,7 @@ TYPEALIAS = {
 	'struct _xmlNs*' : 'xmlNsPtr',
 	'struct _xmlSAXHandler*' : 'xmlSAXHandlerPtr',
 	'struct _xmlTextReader*' : 'xmlTextReaderPtr',
+	'htmlElemDesc*' : 'htmlElemDescPtr'
 }
 TYPEINFO = {
 	'xmlDtdPtr' : {
@@ -81,11 +123,18 @@ TYPEINFO = {
 		'goArgType' : '*XmlNs',
 		'exportStruct' : '_xmlNs',
 	},
+	
+	'htmlElemDescPtr' : {
+		'goArgType' : '*HtmlElemDesc',
+		'go2cConverter' : getNullOrHandler,
+		'exportStruct' : '_htmlElemDesc',
+	},
 	'xmlElementType': {
 		'goArgType':'int',
 	},
 	'xmlChar*' : {
 		'goArgType':'string',
+		'go2cConverter':toCharConverter,
 		'returnConverter' : retString,
 	},
 	'int*' : {
@@ -97,6 +146,7 @@ TYPEINFO = {
 	'char*' : {
 		'goArgType':'string',
 		'go2cConverter':toCharConverter,
+		"to-string" : c_cchar2string,
 	},
 	'__string_ucharptr' : {
 		'goArgType':'*string',
@@ -139,6 +189,11 @@ TYPEINFO = {
 		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlSAXHandler'
 	},
+	'htmlStatus' : {
+		'goArgType' : 'int',
+		'go2cConverter' : getConverter,
+		'returnConverter' : retObject,
+	},
 	'int' : {
 		'goArgType' : 'int',
 		'go2cConverter' : getConverter,
@@ -159,8 +214,9 @@ INCLUDES = (
 );
 
 IMPORTS = (
-	'xmlDocCopyNode',
 	'UTF8ToHtml',
+	'htmlAttrAllowed',
+	'xmlDocCopyNode',
 	'xmlMemBlocks',
 	'xmlStrlen',
 	'xmlFreeTextReader',
@@ -181,7 +237,7 @@ GO_TPL = """package goxml
 #include <libxml/%(filename)s>
 */
 import "C"
-%(unsafe_import)s
+%(imports)s
 
 %(consts_list)s
 %(structs_list)s
@@ -209,27 +265,40 @@ class FileConverter():
 		self.gofilename = re.sub(r'\.h$',".go",self.filename)
 		self.unsafe = False
 		self.consts = []
+	def calcArgType(self,arg,sig):
+		for s in sig[1]:
+			if arg==s[0]:
+				return "".join(s[1])
+		raise Exception("calcArgType not found %s %s" %(arg,sig))
 	def createFuncArgString(self,fname,sig):
 		goFname = fname[0].upper() + fname[1:]
 		cReturnType = "".join(sig[0]) 
 		args = []
 		errs = []
 		goReturnType = None
-		try:
-			goReturnType = TYPEINFO[cReturnType]['goReturnType']
-		except:
+		
+		dbData = lookInDb('r',fname,cReturnType,None)
+		if dbData:
+			if (dbData[0] == 'CALC'):
+				goReturnType=dbData[1].getReturnType(self.calcArgType(dbData[1].arg(),sig),cReturnType)
+		
+		if goReturnType is None:
 			try:
-				goReturnType = TYPEINFO[cReturnType]['goArgType']
+				goReturnType = TYPEINFO[cReturnType]['goReturnType']
 			except:
-				#goArgType = ptype
-				goReturnType = cReturnType
-				errs.append('Warn: ReturnType %s Not defined' % (goReturnType))
+				try:
+					goReturnType = TYPEINFO[cReturnType]['goArgType']
+				except:
+					#goArgType = ptype
+					goReturnType = cReturnType
+					errs.append('Warn: ReturnType %s Not defined' % (goReturnType))
 		
 		for (pname,ptype,_) in sig[1]:
 			if pname is not None:
 				ptype = "".join(ptype)
 				dbData = lookInDb('f',fname,ptype,pname)
 				goArgType = None
+				
 				if dbData:
 					if dbData[0] in ('SKIP','CALC'):
 						continue
@@ -254,8 +323,8 @@ class FileConverter():
 	
 	def createInputInits(self,fname,sig):
 		errs = []
-		outs = []
-		recalcs = []
+		outVarsBlock = []
+		recalcsBlock = []
 		for (pname,ptype,_) in sig[1]:
 			if pname is not None:
 				ptype = "".join(ptype)
@@ -267,7 +336,7 @@ class FileConverter():
 					elif dbData[0] == 'RETYPE':
 						ptype = dbData[1]
 					elif dbData[0] == 'CALC':
-						recalcs.append(dbData[1](pname,ptype))
+						recalcsBlock.append(dbData[1](pname,ptype))
 						continue
 					else:
 						raise (Exception('Not implemented %s' % str(dbData)))
@@ -277,9 +346,12 @@ class FileConverter():
 					go2cConvert = lambda a,b:pname
 					errs.append('Warn: %s %s No converter to C(go2cConverter)' % (pname,ptype))
 				
-				outs.append(str(go2cConvert(pname,ptype)) )
-			
-		return "\n".join(("\n".join(outs) , "\n".join(recalcs))),errs
+				outVarsBlock.append(str(go2cConvert(pname,ptype)) )
+		
+		outStr = self.funcJoin(outVarsBlock)
+		recalcStr = self.funcJoin(recalcsBlock)
+		
+		return "\n".join((outStr , recalcStr)),errs
 	
 	def createCallLine(self,fName,sig):
 		
@@ -310,9 +382,23 @@ class FileConverter():
 		else:
 			callLine = "\t" + callLine + "\n"
 		
-		returnLine = ""
-		
-		if ( cReturnType != 'void') :
+		returnBlock = []
+		errorProcessBlock = []
+		dbData = lookInDb('r',fName,cReturnType,None)
+		if dbData and dbData[0] == 'CALC':
+			mapper = dbData[1]
+			errArg = mapper.errArg()
+			if errArg == 'ret':
+				okVal = mapper.okVal()
+				errorProcessBlock.append("""if c_ret != %(okVal)s {
+	err = fmt.Errorf("%(fName)s errno %%d" ,c_ret)
+}"""% {"okVal":okVal,"fName":fName})
+				returnBlock.append("return")
+			else:
+				raise Exception("Not Implemented")
+			#goReturnType=dbData[1].getReturnType(self.calcArgType(dbData[1].arg(),sig),cReturnType)
+		elif cReturnType != 'void' :
+			
 			returnConverter = None
 			try:
 				returnConverter = TYPEINFO[cReturnType]['returnConverter']
@@ -331,9 +417,9 @@ class FileConverter():
 					goReturnType = cReturnType
 					errs.append('Warn[createCallLine]: ReturnType %s Not defined' % (goReturnType))
 			
-			returnLine="\t" + returnConverter(cReturnType,goReturnType) 
+			returnBlock.append(returnConverter(cReturnType,goReturnType)) 
 		# Post Process Parameters
-		postProcess = ""
+		postProcessBlock = []
 		for (pname,ptype,_) in sig[1]:
 			if pname is not None:
 				ptype = "".join(ptype)
@@ -345,11 +431,38 @@ class FileConverter():
 						continue
 				postProcessor = TYPEINFO.get(ptype,{}).get('postProcessor')
 				if postProcessor:
-					postProcess+="\t" + postProcessor(pname) + "\n"
-				
+					postProcessBlock.append("\t" + postProcessor(pname))
 		
-		return callLine + postProcess+returnLine,errs
-	
+		dbData = lookInDb('r',fName,cReturnType,None)
+		if dbData and dbData[0] == 'CALC':
+			mapper = dbData[1]
+			arg1 = mapper.arg()
+			#print arg1, "\t",self.calcArgType(arg1,sig),"\t",mapper.getReturnTuple(self.calcArgType(arg1,sig),cReturnType)
+			v = mapper.getReturnTuple(self.calcArgType(arg1,sig),cReturnType)
+			vName = v[0][0]
+			vType = v[0][1]
+			cName = arg1
+			cType = self.calcArgType(arg1,sig)
+			cInfo = TYPEINFO[cType]
+			if 'to-' + vType:
+				converter = cInfo['to-' + vType] 
+				postProcessBlock.append(converter(vName,"c_"+cName))
+			else:
+				raise Exception("Not implemented")
+			print vName,vType,cName,cType
+			
+		returnStr = self.funcJoin(returnBlock)
+		postProcessStr = self.funcJoin(postProcessBlock)
+		errorProcessStr= self.funcJoin(errorProcessBlock)
+		if errorProcessStr and postProcessStr:
+			errorProcessStr += " else {"
+			postProcessStr = self.funcJoin((postProcessStr,"}"))
+		return "\n".join((callLine,errorProcessStr,postProcessStr,returnStr)),errs
+	def funcJoin(self,l):
+		r = []
+		for i in l:
+			r.append("\n".join(["\t" + k for k in i.split("\n")]))
+		return "\n".join(r)
 	def processFuncsList(self,functionSignatures):
 		flist = []
 		for fName in functionSignatures:
@@ -362,8 +475,11 @@ class FileConverter():
 	   ReturnType: %s
 	   Args: %s
 */
-"""	% ( fName , "".join(sig[0]) , sig[1]) 
+"""	% ( fName , "".join(sig[0]) , sig[1])
+				sig = list(sig)
+				sig[1] = list(sig[1])
 				funcCode = funcComment
+				self.preprocessArgsSig(sig)
 				funArgString,err = self.createFuncArgString(fName,sig)
 				errs+=err
 				inputInits,err = self.createInputInits(fName,sig)
@@ -389,6 +505,18 @@ class FileConverter():
 					self.unsafe = True
 				flist.append(funcCode)
 		return flist
+	def preprocessArgsSig(self,sig):
+		c = 1
+		for i,(n,t,_) in enumerate(sig[1]):
+			if n is None and "".join(t) != 'void':
+				sig[1][i]=("arg%i" % c , t, _)
+				c+=1
+		for i,(n,t,_) in enumerate(sig[1]):
+			elType = "".join(t)
+			if elType in TYPEALIAS:
+				sig[1][i]=(n , TYPEALIAS[elType], _)
+				
+		
 	def processConstsList(self,enumSignatures):
 		r = []
 		for enum in enumSignatures:
@@ -531,7 +659,7 @@ class FileConverter():
 				
 		varsdict = {
 			'filename' : self.filename,
-			'unsafe_import' : '',
+			"imports" : '',
 			'consts_list' : '',
 			'structs_list' : '',
 			'funcs_list' : '',
@@ -543,8 +671,16 @@ class FileConverter():
 		
 		varsdict['funcs_list'] = "".join(self.processFuncsList(p.defs['functions']))
 		varsdict['structs_list'] = "".join(self.processStructs(p.defs['structs']))
-		if self.unsafe:
-			varsdict['unsafe_import'] = "import \"unsafe\""
+		imports = []
+		if "errors.New" in varsdict['funcs_list']:
+			imports.append("import \"errors\"\n")
+		if "unsafe.Pointer" in varsdict['funcs_list']:
+			imports.append("import \"unsafe\"\n")
+		if "fmt.Errorf" in varsdict['funcs_list']:
+			imports.append("import \"fmt\"\n")
+		
+		varsdict['imports'] =  	"".join(imports)
+		
 		open(self.gofilename,"w").write(GO_TPL % varsdict)
 		
 		

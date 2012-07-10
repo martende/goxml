@@ -8,6 +8,7 @@ void * get_userdata(void) {
 	printf("get_userdata: 0x%08x\n",(unsigned int)userdata);
 	return userdata;
 }
-int UTF8ToHtml2(char* a,int*b,unsigned char*c,int*d)  {
-	printf("Svisni v huy pridutrok\n");
+int UTF8ToHtml2(unsigned char* a,int*b,unsigned char*c,int*d)  {
+	printf("Svisni v huy pridutrok d=%i \n",*d);
+	*b = 666;
 }

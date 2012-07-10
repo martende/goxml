@@ -14,7 +14,10 @@ func koko(a *int) {
 }
 func main() {
 	fmt.Printf("121\n")
-	s := ""
-	i := 12
-	UTF8ToHtml(&s,&i,"s")
+	k,_:=UTF8ToHtml("t1")
+	fmt.Printf("i=%s\n",k)
+        k,_=UTF8ToHtml("t1ß")
+        fmt.Printf("i=%s\n",k)
+        k,_=UTF8ToHtml("")
+        fmt.Printf("i=%s\n",k)
 }

@@ -26,13 +26,15 @@ func (s *HTTPparser_suite) SetUpSuite(c *C) {
 	//inttab := make([]int,1024)
 }
 func (s *HTTPparser_suite) TestUTF8ToHtml(c *C) {
-	var out,in string
-	var outlen,inlen int
-	in = "test1"
-	inlen = len(in);
-	outlen = 1000;
-	goxml.UTF8ToHtml(&out,&outlen,in,&inlen)
-	fmt.Printf("out = %s in=%s\n" , out,in);
+	i1 := ""
+	r1,_:= goxml.UTF8ToHtml(i1)
+	c.Check(r1, Equals, "")
+	i2 := "alle"
+	r2,_:= goxml.UTF8ToHtml(i2)
+	c.Check(r2, Equals, "alle")
+	i3 := "alleß"
+	r3,_:= goxml.UTF8ToHtml(i3)
+	c.Check(r3, Equals, "alle&szlig;")
 }
 
 func (s *HTTPparser_suite) TesthtmlAttrAllowed(c *C) {
