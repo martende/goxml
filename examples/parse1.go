@@ -14,13 +14,14 @@ Usage:
 ./parse1 test1.xml
 
 */
-func example1Func(filename string) {
+func example1Func(filename string) string {
 	doc:=XmlReadFile(filename, "", 0)
 	if doc == nil {
         fmt.Fprint(os.Stderr,"Failed to parse %s\n", filename);
-        return;
+	return string(nil);
     }
     XmlFreeDoc(doc);
+    return "123";
 }
 
 func main() {

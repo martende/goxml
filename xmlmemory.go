@@ -16,6 +16,7 @@ import "C"
 func XmlMemoryDump() {
 
 	C.xmlMemoryDump()
+
 }
 /* 
 	   Function: xmlMemBlocks

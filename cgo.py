@@ -7,6 +7,9 @@ import optparse
 
 FUNC_DESCS = (
 	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
+	('f','UTF8ToHtml',None,'out'),('RETYPE','__string_ucharptr'),
+	
+	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
 	('s','xmlDocPtr',None,'ids'),('PRIVATE'),
 	('s','xmlDocPtr',None,'refs'),('PRIVATE'),
@@ -15,20 +18,37 @@ FUNC_DESCS = (
 	('s',None,'void*','userData'),('PRIVATE'),
 	('s',None,None,'type'),('PRIVATE'),
 	('s',None,None,'_private'),('PRIVATE'),
+	('s',None,'void*',None),('PRIVATE'),
+	('s',None,'int*',None),('PRIVATE'),
 	
 )
 getHandler =  lambda n,t:"\tc_%s := %s.handler" % (n,n)
 getConverter = lambda n,t:'\tc_%s := C.%s(%s)' % (n,t,n)
 
+# The standard C numeric types are available under the names C.char, C.schar (signed char), 
+# C.uchar (unsigned char), C.short, C.ushort (unsigned short), C.int, C.uint (unsigned int), C.long, C.ulong (unsigned long), C.longlong (long long), C.ulonglong (unsigned long long), C.float, C.double. 
+# The C type void* is represented by Go's unsafe.Pointer.
+def go2c(t):
+	return {
+		'unsigned char*' : "*C.uchar",
+		'char*' : "*C.char",
+	}.get(t)
+	
 def toCharConverter(n,t):
-	return """\tc_%s:= C.CString(%s)""" % (n,n)
+	return """\tc_%s:= (%s)(unsafe.Pointer(C.CString(%s)))""" % (n,go2c(t),n)
 
 def getNullOrHandler(n,t): 
 	return """\tvar c_%(n)s C.%(t)s=nil ;if %(n)s !=nil { c_%(n)s = %(n)s.handler }""" % {'n':n,'t':t}
+
+#
+# returnConverter
+#
 def retNullOrObject(t,goRetType):
 	return 'if c_ret == nil {return nil}\n\treturn &%s{handler:c_ret}' % goRetType  
 def retObject(t,goRetType):
 	return "return %s(c_ret)" % t
+def retString(t,goRetType):
+	return "if c_ret == nil {return \"\"}\n\tg_ret:=C.GoString((*C.char)(unsafe.Pointer(c_ret)))\n\treturn g_ret" 
 
 TYPEALIAS = {
 	'struct _xmlNode*' : 'xmlNodePtr',
@@ -37,6 +57,7 @@ TYPEALIAS = {
 	'struct _xmlDict*' : 'xmlDictPtr',
 	'struct _xmlNs*' : 'xmlNsPtr',
 	'struct _xmlSAXHandler*' : 'xmlSAXHandlerPtr',
+	'struct _xmlTextReader*' : 'xmlTextReaderPtr',
 }
 TYPEINFO = {
 	'xmlDtdPtr' : {
@@ -47,7 +68,7 @@ TYPEINFO = {
 		'goArgType' : '*XmlDict',
 		'exportStruct' : '_xmlDict',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 	},
 	'xmlNsPtr' : {
 		'goArgType' : '*XmlNs',
@@ -58,45 +79,63 @@ TYPEINFO = {
 	},
 	'xmlChar*' : {
 		'goArgType':'string',
+		'returnConverter' : retString,
 	},
-	
+	'int*' : {
+		'goArgType':'*int',
+		'go2cConverter' : lambda n,t:"\tc0_%(n)s:=C.int(*%(n)s)\n\tc_%(n)s:=&c0_%(n)s" % {"n":n,"t":t},
+		'postProcessor' : lambda n: "*%(n)s = int(c0_%(n)s)" % {"n":n}
+	},
+	'unsigned char*' : ('alias','char*'),
 	'char*' : {
 		'goArgType':'string',
 		'go2cConverter':toCharConverter,
 	},
+	'__string_ucharptr' : {
+		'goArgType':'*string',
+		'go2cConverter':lambda n,t: "\tc_%(n)s:= (*C.uchar)(unsafe.Pointer((C.CString(*%(n)s))))" % {"n":n,"t":t},
+		'postProcessor' : lambda n: "*%(n)s = C.GoString((*C.char)(unsafe.Pointer(c_%(n)s)))" % {"n":n}
+	},
 	'xmlParserInputPtr' : {
 		'goArgType' : '*XmlParserInput',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlParserInput'
 	},
 	'xmlParserCtxtPtr': {
 		'goArgType' : '*XmlParserCtxt',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlParserCtxt'
 	},
+	'xmlTextReaderPtr': {
+		'goArgType' : '*XmlTextReader',
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
+		'exportStruct' : '_xmlTextReader'
+	},
+	
 	'xmlNodePtr' : {
 		'goArgType' : '*XmlNode',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 	},
 	'xmlDocPtr' : {
 		'goArgType' : '*XmlDoc',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlDoc'
 	},
 	'xmlSAXHandlerPtr' : {
 		'goArgType' : '*XmlSAXHandler',
 		'go2cConverter' : getNullOrHandler,
-		'c2goConverter' : retNullOrObject,
+		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlSAXHandler'
 	},
 	'int' : {
 		'goArgType' : 'int',
 		'go2cConverter' : getConverter,
-		'c2goConverter' : retObject,
+		'returnConverter' : retObject,
 	},
 	'void' : {
 		'goReturnType':''
@@ -162,6 +201,7 @@ class FileConverter():
 		self.include = include
 		self.gofilename = re.sub(r'\.h$',".go",self.filename)
 		self.unsafe = False
+		self.consts = []
 	def createFuncArgString(self,fname,sig):
 		goFname = fname[0].upper() + fname[1:]
 		cReturnType = "".join(sig[0]) 
@@ -186,13 +226,16 @@ class FileConverter():
 				if dbData:
 					if 'SKIP' in dbData:
 						continue
-					raise ('Not implemented')
-				else:
-					try:
-						goArgType = TYPEINFO[ptype]['goArgType']
-					except:
-						goArgType = ptype
-						errs.append('Warn: %s %s Not defined' % (pname,ptype))
+					elif dbData[0] == 'RETYPE':
+						ptype = dbData[1]
+					else:
+						raise ('Not implemented')
+				
+				try:
+					goArgType = TYPEINFO[ptype]['goArgType']
+				except:
+					goArgType = ptype
+					errs.append('Warn: %s %s Not defined' % (pname,ptype))
 					
 				args.append("%s %s" % (pname,goArgType))
 		
@@ -213,7 +256,10 @@ class FileConverter():
 				if dbData:
 					if 'SKIP' in dbData:
 						continue
-					raise ('Not implemented')
+					elif dbData[0] == 'RETYPE':
+						ptype = dbData[1]
+					else:
+						raise ('Not implemented')
 				try:
 					go2cConvert = TYPEINFO[ptype]['go2cConverter']
 				except:
@@ -237,20 +283,30 @@ class FileConverter():
 				if 'SKIP' in dbData:
 					callargs.append("nil")
 					continue
+				elif dbData[0] == 'RETYPE':
+					ptype = dbData[1]
 				else:
 					raise ('Not implemented')
 			if pname is not None:
 				callargs.append("c_" + pname)
-		callLine = 'C.' + fName + "(" + ",".join(callargs)+")"
-		if ( cReturnType != 'void') :
-			callLine = "\tc_ret := " + callLine
-			c2goConverter = None
-			try:
-				c2goConverter = TYPEINFO[cReturnType]['c2goConverter']
-			except:
-				c2goConverter = lambda t,p:t
-				errs.append('Warn: type (%s) has no Return converter to Go' % (cReturnType))
 			
+		callLine = 'C.' + fName + "(" + ",".join(callargs)+")"
+		
+		if ( cReturnType != 'void') :
+			callLine = "\tc_ret := " + callLine + "\n"
+		else:
+			callLine = "\t" + callLine + "\n"
+		
+		returnLine = ""
+		
+		if ( cReturnType != 'void') :
+			returnConverter = None
+			try:
+				returnConverter = TYPEINFO[cReturnType]['returnConverter']
+			except:
+				returnConverter = lambda t,p:t
+				errs.append('Warn: type (%s) has no Return converter to Go' % (cReturnType))
+			 
 			goReturnType = None
 			try:
 				goReturnType = TYPEINFO[cReturnType]['goReturnType']
@@ -262,10 +318,22 @@ class FileConverter():
 					goReturnType = cReturnType
 					errs.append('Warn[createCallLine]: ReturnType %s Not defined' % (goReturnType))
 			
-			callLine+="\n\t" + c2goConverter(cReturnType,goReturnType) 
-		else:
-			callLine = "\t" + callLine
-		return callLine,errs
+			returnLine="\t" + returnConverter(cReturnType,goReturnType) 
+		# Post Process Parameters
+		postProcess = ""
+		for (pname,ptype,_) in sig[1]:
+			if pname is not None:
+				ptype = "".join(ptype)
+				dbData = lookInDb('f',fName,ptype,pname)
+				if dbData:
+					if dbData[0] == 'RETYPE':
+						ptype = dbData[1]
+				postProcessor = TYPEINFO.get(ptype,{}).get('postProcessor')
+				if postProcessor:
+					postProcess+="\t" + postProcessor(pname) + "\n"
+				
+		
+		return callLine + postProcess+returnLine,errs
 	
 	def processFuncsList(self,functionSignatures):
 		flist = []
@@ -302,7 +370,8 @@ class FileConverter():
 				
 				if not inImports or errs:
 					funcCode+="\n*/\n"
-			
+				if 'unsafe.Pointer' in funcCode:
+					self.unsafe = True
 				flist.append(funcCode)
 		return flist
 	def processConstsList(self,enumSignatures):
@@ -339,6 +408,7 @@ class FileConverter():
 				errored = True
 				errs.append("Element %s has not registered type %s " % (elName,elType))
 			goType = elType
+			
 			try:
 				goType = TYPEINFO[elType]['goArgType']
 			except:
@@ -348,6 +418,11 @@ class FileConverter():
 			if goType == 'int':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn int(this.handler."+elName+")\n}\n"
+			elif goType== '*string':
+				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
+				inner += "if this.handler."+elName+" == nil { return nil }\n"
+				inner += "\ts:=C.GoString((*C.char)(unsafe.Pointer(this.handler."+elName+")))\n\treturn &s\n}\n"
+				self.unsafe=True
 			elif goType[0] == '*':
 				self.unsafe=True
 				# this._next.handler = (C.xmlNsPtr)(unsafe.Pointer(this.handler.next))
@@ -399,23 +474,39 @@ class FileConverter():
 	def processFile(self):
 		replace = {}
 		if True:
+			# enum a = 1 << 213 bug
 			f=open(self.include,"r")
 			s = f.read()
 			s = re.findall("(\s+(\d+)<<(\d+)(,?))",s)
 			for r in s:
 				replace[r[0]] = str(int(r[1]) << int(r[2]) ) +  r[3] 
-
+		
+		# Read defines from version ( defines only - not funcs and etc )
+		
+		vp = CParser(
+			"/".join(self.include.split("/")[:-1] + list(("xmlversion.h",))),
+			cache=TMP + "/" + "xmlversion.h" + ".cache",
+		)
+		#print vp.defs['macros']
+		#return
+		macros = {
+			'XMLCALL': '',
+			#'LIBXML_PUSH_ENABLED':'',
+			#'LIBXML_READER_ENABLED':''
+		}
+		macros.update(vp.defs['macros'])
 		p = CParser(
 			# TMP + "/" + self.filename + ".h",
 			self.include,
 			cache=TMP + "/" + self.filename + ".cache",
+			#copyFrom=vp,
 			replace  = replace,	
 			#replace = {"\s+(\d+)<<(\d+)(,?)" : lambda x:str(int(x.group(1))<<int(x.group(2)))+ x.group(3)},
-			macros={
-				'XMLCALL': '',
-				'LIBXML_PUSH_ENABLED':1
-			}
+			macros=macros
 		)
+		if options.PRINTALL:
+			p.printAll()
+			return
 		#mk = {'XMLCALL': '',
 		#'LIBXML_PUSH_ENABLED':1
 		#}
@@ -455,6 +546,10 @@ parser.add_option('-i', '--includes',
     action="append", dest="INCLUDES",
     help="Force change import functions", default=None)
 
+parser.add_option('-p', '--print-all',
+    action="store_true", dest="PRINTALL",
+    help="Print parser content", default=None)
+
 
 options, args = parser.parse_args()
 
@@ -463,10 +558,16 @@ if options.IMPORTS is not None:
 if options.INCLUDES is not None:
 	INCLUDES = options.INCLUDES
 
-
+def convertAliases():
+	for t in TYPEINFO:
+		if isinstance(TYPEINFO[t],tuple):
+			if TYPEINFO[t][0] == 'alias':
+				TYPEINFO[t] = TYPEINFO[TYPEINFO[t][1]]
+	
 if not os.path.exists(TMP):
 	os.mkdir(TMP) 
 
+convertAliases()
 consts = []
 includes = []
 for include in INCLUDES:

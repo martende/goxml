@@ -10,39 +10,37 @@ const gen_nb_unsigned_char_ptr=1
 const gen_nb_int_ptr=2
 const gen_nb_const_unsigned_char_ptr=1
 
+type HTTPparser_suite struct{}
+
+var _ = Suite(&HTTPparser_suite{})
 
 
-gen_int_ptr(no int,nr int) *int{
+func gen_int_ptr(no int,nr int) *int{
 	/*if no == 0 {
 		return inttab
 	}*/
 	return nil
 }
 
-func (s *S) SetUpSuite(c *C) {
-	inttab =make([]int,1024)
+func (s *HTTPparser_suite) SetUpSuite(c *C) {
+	//inttab := make([]int,1024)
 }
-func (s *S) TestUTF8ToHtml(c *C) {
-	//fmt.Printf("AAAAAAAAAAAAAAAAAA\n")
-	
-	for n_out:= 0;n_out < gen_nb_unsigned_char_ptr;n_out++ {
-    	for n_outlen := 0;n_outlen < gen_nb_int_ptr;n_outlen++ {
-    		for n_in := 0;n_in < gen_nb_const_unsigned_char_ptr;n_in++ {
-    			for n_inlen := 0;n_inlen < gen_nb_int_ptr;n_inlen++ {
-    				mem_base:=goxml.XmlMemBlocks()
-    				out:=nil
-    				outlen:=gen_int_ptr(n_outlen, 1)
-    				fmt.Printf("%i \n",mem_base)
-    			}
-    		}
-    	}
-    }
+func (s *HTTPparser_suite) TestUTF8ToHtml(c *C) {
+	var out,in string
+	var outlen,inlen int
+	in = "test1"
+	inlen = len(in);
+	outlen = 1000;
+	goxml.UTF8ToHtml(&out,&outlen,in,&inlen)
+	fmt.Printf("out = %s in=%s\n" , out,in);
 }
 
-func (s *S) test_htmlAttrAllowed(c *C) {
+func (s *HTTPparser_suite) TesthtmlAttrAllowed(c *C) {
+	fmt.Printf("TesthtmlAttrAllowed\n")
 }
 
-func (s *S) test_htmlAutoCloseTag(c *C) {
+func (s *S) TesthtmlAutoCloseTag(c *C) {
+	fmt.Printf("test_htmlAutoCloseTag\n")
 }
 
 func (s *S) test_htmlCreateMemoryParserCtxt(c *C) {

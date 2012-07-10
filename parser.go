@@ -24,18 +24,10 @@ import "unsafe"
 	Element nbChars not recognized getter for type long 
 	Element checkIndex has not registered type long 
 	Element checkIndex not recognized getter for type long 
-	Element space has not registered type int* 
-	Element space not recognized getter for type int* 
-	Element spaceTab has not registered type int* 
-	Element spaceTab not recognized getter for type int* 
-	Element catalogs has not registered type void* 
-	Element catalogs not recognized getter for type void* 
 	Element atts has not registered type xmlChar** 
 	Element atts not recognized getter for type xmlChar** 
 	Element nsTab has not registered type xmlChar** 
 	Element nsTab not recognized getter for type xmlChar** 
-	Element attallocs has not registered type int* 
-	Element attallocs not recognized getter for type int* 
 	Element pushTab has not registered type void** 
 	Element pushTab not recognized getter for type void** 
 	Element attsDefault has not registered type xmlHashTablePtr 
@@ -65,9 +57,13 @@ type XmlParserCtxt struct {
 	_myDoc *XmlDoc
 	_input *XmlParserInput
 	_node *XmlNode
+	// space int* // Private
+	// spaceTab int* // Private
 	_entity *XmlParserInput
 	// _private void* // Private
+	// catalogs void* // Private
 	_dict *XmlDict
+	// attallocs int* // Private
 	_freeElems *XmlNode
 }
 func (this *XmlParserCtxt) GetSax() *XmlSAXHandler {
@@ -234,22 +230,12 @@ func (this *XmlParserCtxt) GetExtSubURI() string {
 func (this *XmlParserCtxt) GetExtSubSystem() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubSystem)))
 }
-/*
-func (this *XmlParserCtxt) GetSpace() int* {
-	return int(this.handler.space)
-}
-*/
 func (this *XmlParserCtxt) GetSpaceNr() int {
 	return int(this.handler.spaceNr)
 }
 func (this *XmlParserCtxt) GetSpaceMax() int {
 	return int(this.handler.spaceMax)
 }
-/*
-func (this *XmlParserCtxt) GetSpaceTab() int* {
-	return int(this.handler.spaceTab)
-}
-*/
 func (this *XmlParserCtxt) GetDepth() int {
 	return int(this.handler.depth)
 }
@@ -281,11 +267,6 @@ func (this *XmlParserCtxt) GetLoadsubset() int {
 func (this *XmlParserCtxt) GetLinenumbers() int {
 	return int(this.handler.linenumbers)
 }
-/*
-func (this *XmlParserCtxt) GetCatalogs() void* {
-	return int(this.handler.catalogs)
-}
-*/
 func (this *XmlParserCtxt) GetRecovery() int {
 	return int(this.handler.recovery)
 }
@@ -334,11 +315,6 @@ func (this *XmlParserCtxt) GetNsMax() int {
 /*
 func (this *XmlParserCtxt) GetNsTab() xmlChar** {
 	return int(this.handler.nsTab)
-}
-*/
-/*
-func (this *XmlParserCtxt) GetAttallocs() int* {
-	return int(this.handler.attallocs)
 }
 */
 /*
@@ -711,31 +687,27 @@ func (this *XmlSAXHandler) GetSerror() xmlStructuredErrorFunc {
 */
 
 /* 
-	   Function: xmlCtxtReadFile
-	   ReturnType: xmlDocPtr
-	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
-*/
-func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options int) *XmlDoc {
-	var c_ctxt C.xmlParserCtxtPtr=nil ;if ctxt !=nil { c_ctxt = ctxt.handler }
-	c_filename:= C.CString(filename)
-	c_encoding:= C.CString(encoding)
-	c_options := C.int(options)
-	c_ret := C.xmlCtxtReadFile(c_ctxt,c_filename,c_encoding,c_options)
-	if c_ret == nil {return nil}
-	return &XmlDoc{handler:c_ret}
-}
-/* 
 	   Function: xmlParseChunk
 	   ReturnType: int
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
 */
 func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
 	var c_ctxt C.xmlParserCtxtPtr=nil ;if ctxt !=nil { c_ctxt = ctxt.handler }
-	c_chunk:= C.CString(chunk)
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
 	c_size := C.int(size)
 	c_terminate := C.int(terminate)
 	c_ret := C.xmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
 	return int(c_ret)
+}
+/* 
+	   Function: xmlCleanupParser
+	   ReturnType: void
+	   Args: ((None, ['void'], None),)
+*/
+func XmlCleanupParser() {
+
+	C.xmlCleanupParser()
+
 }
 /* 
 	   Function: xmlCreatePushParserCtxt
@@ -744,12 +716,26 @@ func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int 
 */
 func XmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,size int,filename string) *XmlParserCtxt {
 	var c_sax C.xmlSAXHandlerPtr=nil ;if sax !=nil { c_sax = sax.handler }
-	c_chunk:= C.CString(chunk)
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
 	c_size := C.int(size)
-	c_filename:= C.CString(filename)
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
 	c_ret := C.xmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename)
 	if c_ret == nil {return nil}
 	return &XmlParserCtxt{handler:c_ret}
+}
+/* 
+	   Function: xmlCtxtReadFile
+	   ReturnType: xmlDocPtr
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options int) *XmlDoc {
+	var c_ctxt C.xmlParserCtxtPtr=nil ;if ctxt !=nil { c_ctxt = ctxt.handler }
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	c_options := C.int(options)
+	c_ret := C.xmlCtxtReadFile(c_ctxt,c_filename,c_encoding,c_options)
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:c_ret}
 }
 /* 
 	   Function: xmlNewParserCtxt
@@ -763,19 +749,6 @@ func XmlNewParserCtxt() *XmlParserCtxt {
 	return &XmlParserCtxt{handler:c_ret}
 }
 /* 
-	   Function: xmlReadFile
-	   ReturnType: xmlDocPtr
-	   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
-*/
-func XmlReadFile(URL string,encoding string,options int) *XmlDoc {
-	c_URL:= C.CString(URL)
-	c_encoding:= C.CString(encoding)
-	c_options := C.int(options)
-	c_ret := C.xmlReadFile(c_URL,c_encoding,c_options)
-	if c_ret == nil {return nil}
-	return &XmlDoc{handler:c_ret}
-}
-/* 
 	   Function: xmlFreeParserCtxt
 	   ReturnType: void
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None),)
@@ -783,15 +756,7 @@ func XmlReadFile(URL string,encoding string,options int) *XmlDoc {
 func XmlFreeParserCtxt(ctxt *XmlParserCtxt) {
 	var c_ctxt C.xmlParserCtxtPtr=nil ;if ctxt !=nil { c_ctxt = ctxt.handler }
 	C.xmlFreeParserCtxt(c_ctxt)
-}
-/* 
-	   Function: xmlCleanupParser
-	   ReturnType: void
-	   Args: ((None, ['void'], None),)
-*/
-func XmlCleanupParser() {
 
-	C.xmlCleanupParser()
 }
 /* 
 	   Function: xmlReadMemory
@@ -799,12 +764,25 @@ func XmlCleanupParser() {
 	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
 */
 func XmlReadMemory(buffer string,size int,URL string,encoding string,options int) *XmlDoc {
-	c_buffer:= C.CString(buffer)
+	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
 	c_size := C.int(size)
-	c_URL:= C.CString(URL)
-	c_encoding:= C.CString(encoding)
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
 	c_options := C.int(options)
 	c_ret := C.xmlReadMemory(c_buffer,c_size,c_URL,c_encoding,c_options)
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:c_ret}
+}
+/* 
+	   Function: xmlReadFile
+	   ReturnType: xmlDocPtr
+	   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlReadFile(URL string,encoding string,options int) *XmlDoc {
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	c_options := C.int(options)
+	c_ret := C.xmlReadFile(c_URL,c_encoding,c_options)
 	if c_ret == nil {return nil}
 	return &XmlDoc{handler:c_ret}
 }

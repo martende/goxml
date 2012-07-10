@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "goxml"
+	//. "goxml"
 	//"os"
 	"fmt"
 )
@@ -9,9 +9,13 @@ import (
 type M struct {
 	s string;
 }
-
+func koko(a *int) {
+	*a = 5;
+}
 func main() {
 	fmt.Printf("121\n")
-	s := M{"soski"}
-	SetUserdata(s)
+	//s := M{"soski"}
+	var a int;
+	koko(&a)
+	fmt.Printf("a = %d\n",a)
 }

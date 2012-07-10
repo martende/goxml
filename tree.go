@@ -304,6 +304,7 @@ func XmlAddChild(parent *XmlNode,cur *XmlNode) *XmlNode {
 func XmlFreeDoc(cur *XmlDoc) {
 	var c_cur C.xmlDocPtr=nil ;if cur !=nil { c_cur = cur.handler }
 	C.xmlFreeDoc(c_cur)
+
 }
 
 

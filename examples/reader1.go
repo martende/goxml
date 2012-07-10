@@ -23,7 +23,7 @@ func processNode(reader *XmlTextReader) {
     	name = "--"
     }
 
-	value := XmlTextReaderConstValue(reader)
+    value := XmlTextReaderConstValue(reader)
 
     fmt.Printf("%d %d %s %d %d", 
 	    XmlTextReaderDepth(reader),
