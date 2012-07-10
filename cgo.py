@@ -5,9 +5,16 @@ import sys
 import re
 import optparse
 
+def calc_len(param):
+	def w(n,t):
+		if t[-1]=='*':
+			s = "\tc0_%(n)s:=C.int(len(%(p)s)+1)\n\tc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t}
+		return s
+	return w
 FUNC_DESCS = (
 	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
 	('f','UTF8ToHtml',None,'out'),('RETYPE','__string_ucharptr'),
+	('f','UTF8ToHtml',None,'inlen'),('CALC',calc_len('in')),
 	
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
@@ -224,12 +231,12 @@ class FileConverter():
 				dbData = lookInDb('f',fname,ptype,pname)
 				goArgType = None
 				if dbData:
-					if 'SKIP' in dbData:
+					if dbData[0] in ('SKIP','CALC'):
 						continue
 					elif dbData[0] == 'RETYPE':
 						ptype = dbData[1]
 					else:
-						raise ('Not implemented')
+						raise (Exception('Not implemented %s' % str(dbData)))
 				
 				try:
 					goArgType = TYPEINFO[ptype]['goArgType']
@@ -248,6 +255,7 @@ class FileConverter():
 	def createInputInits(self,fname,sig):
 		errs = []
 		outs = []
+		recalcs = []
 		for (pname,ptype,_) in sig[1]:
 			if pname is not None:
 				ptype = "".join(ptype)
@@ -258,8 +266,11 @@ class FileConverter():
 						continue
 					elif dbData[0] == 'RETYPE':
 						ptype = dbData[1]
+					elif dbData[0] == 'CALC':
+						recalcs.append(dbData[1](pname,ptype))
+						continue
 					else:
-						raise ('Not implemented')
+						raise (Exception('Not implemented %s' % str(dbData)))
 				try:
 					go2cConvert = TYPEINFO[ptype]['go2cConverter']
 				except:
@@ -268,7 +279,7 @@ class FileConverter():
 				
 				outs.append(str(go2cConvert(pname,ptype)) )
 			
-		return "\n".join(outs),errs
+		return "\n".join(("\n".join(outs) , "\n".join(recalcs))),errs
 	
 	def createCallLine(self,fName,sig):
 		
@@ -285,8 +296,10 @@ class FileConverter():
 					continue
 				elif dbData[0] == 'RETYPE':
 					ptype = dbData[1]
+				elif dbData[0] == 'CALC':
+					pass
 				else:
-					raise ('Not implemented')
+					raise (Exception('Not implemented %s' % str(dbData)))
 			if pname is not None:
 				callargs.append("c_" + pname)
 			
@@ -328,6 +341,8 @@ class FileConverter():
 				if dbData:
 					if dbData[0] == 'RETYPE':
 						ptype = dbData[1]
+					elif dbData[0] == 'CALC':
+						continue
 				postProcessor = TYPEINFO.get(ptype,{}).get('postProcessor')
 				if postProcessor:
 					postProcess+="\t" + postProcessor(pname) + "\n"

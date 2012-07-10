@@ -1,7 +1,7 @@
 package main
 
 import (
-	//. "goxml"
+	. "goxml"
 	//"os"
 	"fmt"
 )
@@ -14,8 +14,7 @@ func koko(a *int) {
 }
 func main() {
 	fmt.Printf("121\n")
-	//s := M{"soski"}
-	var a int;
-	koko(&a)
-	fmt.Printf("a = %d\n",a)
+	s := ""
+	i := 12
+	UTF8ToHtml(&s,&i,"s")
 }

@@ -8,25 +8,5 @@ import "C"
 
 
 
-/* 
-	   Function: xmlMemoryDump
-	   ReturnType: void
-	   Args: ((None, ['void'], None),)
-*/
-func XmlMemoryDump() {
-
-	C.xmlMemoryDump()
-
-}
-/* 
-	   Function: xmlMemBlocks
-	   ReturnType: int
-	   Args: ((None, ['void'], None),)
-*/
-func XmlMemBlocks() int {
-
-	c_ret := C.xmlMemBlocks()
-	return int(c_ret)
-}
 
 

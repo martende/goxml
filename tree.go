@@ -271,40 +271,5 @@ func (this *XmlDtd) GetSystemID() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.SystemID)))
 }
 
-/* 
-	   Function: xmlDocCopyNode
-	   ReturnType: xmlNodePtr
-	   Args: (('node', ['xmlNodePtr'], None), ('doc', ['xmlDocPtr'], None), ('recursive', ['int'], None))
-*/
-func XmlDocCopyNode(node *XmlNode,doc *XmlDoc,recursive int) *XmlNode {
-	var c_node C.xmlNodePtr=nil ;if node !=nil { c_node = node.handler }
-	var c_doc C.xmlDocPtr=nil ;if doc !=nil { c_doc = doc.handler }
-	c_recursive := C.int(recursive)
-	c_ret := C.xmlDocCopyNode(c_node,c_doc,c_recursive)
-	if c_ret == nil {return nil}
-	return &XmlNode{handler:c_ret}
-}
-/* 
-	   Function: xmlAddChild
-	   ReturnType: xmlNodePtr
-	   Args: (('parent', ['xmlNodePtr'], None), ('cur', ['xmlNodePtr'], None))
-*/
-func XmlAddChild(parent *XmlNode,cur *XmlNode) *XmlNode {
-	var c_parent C.xmlNodePtr=nil ;if parent !=nil { c_parent = parent.handler }
-	var c_cur C.xmlNodePtr=nil ;if cur !=nil { c_cur = cur.handler }
-	c_ret := C.xmlAddChild(c_parent,c_cur)
-	if c_ret == nil {return nil}
-	return &XmlNode{handler:c_ret}
-}
-/* 
-	   Function: xmlFreeDoc
-	   ReturnType: void
-	   Args: (('cur', ['xmlDocPtr'], None),)
-*/
-func XmlFreeDoc(cur *XmlDoc) {
-	var c_cur C.xmlDocPtr=nil ;if cur !=nil { c_cur = cur.handler }
-	C.xmlFreeDoc(c_cur)
-
-}
 
 
