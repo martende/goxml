@@ -38,7 +38,8 @@ func (s *HTTPparser_suite) TestUTF8ToHtml(c *C) {
 }
 
 func (s *HTTPparser_suite) TesthtmlAttrAllowed(c *C) {
-	fmt.Printf("TesthtmlAttrAllowed\n")
+	r := goxml.HtmlAttrAllowed(nil,"attr1",1)
+	c.Check(r, Equals, goxml.HTML_INVALID)
 }
 
 func (s *S) TesthtmlAutoCloseTag(c *C) {

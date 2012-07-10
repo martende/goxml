@@ -14,7 +14,7 @@ def calc_len(param,mul=1):
 def create_buffer_as(param,mul=1):
 	def w(n,t):
 		#if t[-1]=='*':
-		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":go2c(t)}
+		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":c2goc(t)}
 		return s
 	return w
 def return_mapper(p1,p2):
@@ -32,7 +32,7 @@ def return_mapper(p1,p2):
 			
 	def w(n,t):
 		#if t[-1]=='*':
-		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":go2c(t)}
+		s = "\tc_%(n)s:= (%(ct)s)(C.calloc(  (C.size_t)( len(%(p)s)*%(mul)s+ 1 )  ,1))\n\tdefer C.free(unsafe.Pointer(c_%(n)s))" % {"n":n,"p":param,"t":t,'mul':mul,"ct":c2goc(t)}
 		return s
 	
 	return t()
@@ -177,6 +177,8 @@ TYPEINFO = {
 		'go2cConverter' : getNullOrHandler,
 		'returnConverter' : retNullOrObject,
 	},
+	'htmlDocPtr': ('alias','xmlDocPtr'),
+	'htmlNodePtr':  ('alias','xmlNodePtr'),
 	'xmlDocPtr' : {
 		'goArgType' : '*XmlDoc',
 		'go2cConverter' : getNullOrHandler,
@@ -201,6 +203,9 @@ TYPEINFO = {
 	},
 	'void' : {
 		'goReturnType':''
+	},
+	'__bool' : {
+		'goArgType' : 'byte'
 	}
 }
 
@@ -216,6 +221,10 @@ INCLUDES = (
 IMPORTS = (
 	'UTF8ToHtml',
 	'htmlAttrAllowed',
+	'htmlAutoCloseTag',
+	)
+
+ALLI = (
 	'xmlDocCopyNode',
 	'xmlMemBlocks',
 	'xmlStrlen',
@@ -534,6 +543,7 @@ class FileConverter():
 		
 		for el in sig:
 			errored = False
+			retyped = False
 			elName = el[0]
 			fieldName=elName[0].upper()+elName[1:] 
 			elType = "".join(el[1])
@@ -544,14 +554,18 @@ class FileConverter():
 				if 'PRIVATE' in info:
 					fields.append(('// ' + elName , elType + " // Private" ) )
 					continue
-			if elType not in TYPEINFO:
+				elif info[0] == 'RETYPE':
+					elType = info[1] 
+					retyped = True
+			if not retyped and elType not in TYPEINFO:
 				if elType in TYPEALIAS:
 					elType =  TYPEALIAS[elType]
+			
 			if elType not in TYPEINFO:
 				errored = True
 				errs.append("Element %s has not registered type %s " % (elName,elType))
-			goType = elType
-			
+
+			goType = elType			
 			try:
 				goType = TYPEINFO[elType]['goArgType']
 			except:
@@ -561,6 +575,9 @@ class FileConverter():
 			if goType == 'int':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn int(this.handler."+elName+")\n}\n"
+			if goType == 'byte':
+				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
+				inner += "\treturn byte(this.handler."+elName+")\n}\n"
 			elif goType== '*string':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "if this.handler."+elName+" == nil { return nil }\n"
@@ -672,11 +689,12 @@ class FileConverter():
 		varsdict['funcs_list'] = "".join(self.processFuncsList(p.defs['functions']))
 		varsdict['structs_list'] = "".join(self.processStructs(p.defs['structs']))
 		imports = []
-		if "errors.New" in varsdict['funcs_list']:
+		
+		if "errors.New" in varsdict['funcs_list'] or "errors.New" in varsdict['structs_list']  :
 			imports.append("import \"errors\"\n")
-		if "unsafe.Pointer" in varsdict['funcs_list']:
+		if "unsafe.Pointer" in varsdict['funcs_list'] or "unsafe.Pointer" in varsdict['structs_list']  :
 			imports.append("import \"unsafe\"\n")
-		if "fmt.Errorf" in varsdict['funcs_list']:
+		if "fmt.Errorf" in varsdict['funcs_list'] or "fmt.Errorf" in varsdict['structs_list']  :
 			imports.append("import \"fmt\"\n")
 		
 		varsdict['imports'] =  	"".join(imports)
@@ -713,7 +731,11 @@ def convertAliases():
 	for t in TYPEINFO:
 		if isinstance(TYPEINFO[t],tuple):
 			if TYPEINFO[t][0] == 'alias':
-				TYPEINFO[t] = TYPEINFO[TYPEINFO[t][1]]
+				parent = TYPEINFO[t][1]
+				TYPEINFO[t] = {}
+				TYPEINFO[t].update(TYPEINFO[parent])
+				if 'exportStruct' in TYPEINFO[t]:
+					del TYPEINFO[t]['exportStruct']
 	
 if not os.path.exists(TMP):
 	os.mkdir(TMP) 
@@ -724,15 +746,17 @@ includes = []
 for include in INCLUDES:
 	p = FileConverter(include)
 	p.processFile()
-	includes.append(p.filename) 
+	includes.append(p.filename)
 	consts += p.consts
 
 consts = dict(map(lambda x : (x ,1 ),consts)).keys()
 incls = "\n".join(["#include <libxml/%s>" % fn for fn in includes])
+
 varsdict = {
 	'filename' : incls,
 	'consts_list' : "\n".join(["const %s = C.%s" % (c,c) for c in consts],)
 }
+
 open("const.go","w").write("""package goxml
 /*
 #cgo pkg-config: libxml-2.0

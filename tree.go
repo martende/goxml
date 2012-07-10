@@ -7,6 +7,7 @@ import "C"
 import "unsafe"
 
 
+
 type XmlNs struct {
 	handler C.xmlNsPtr
 	_next *XmlNs
@@ -40,6 +41,14 @@ func (this *XmlNs) GetContext() *XmlDoc {
 	this._context.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.context))
 	return this._context
 }
+/*
+	Element compression not recognized getter for type int 
+	Element standalone not recognized getter for type int 
+	Element charset not recognized getter for type int 
+	Element parseFlags not recognized getter for type int 
+	Element properties not recognized getter for type int 
+
+*/
 type XmlDoc struct {
 	handler C.xmlDocPtr
 	// _private void* // Private
@@ -121,12 +130,16 @@ func (this *XmlDoc) GetDoc() *XmlDoc {
 	this._doc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.doc))
 	return this._doc
 }
+/*
 func (this *XmlDoc) GetCompression() int {
 	return int(this.handler.compression)
 }
+*/
+/*
 func (this *XmlDoc) GetStandalone() int {
 	return int(this.handler.standalone)
 }
+*/
 func (this *XmlDoc) GetIntSubset() *XmlDtd {
 	if this.handler.intSubset == nil {
 		return nil
@@ -166,9 +179,11 @@ func (this *XmlDoc) GetEncoding() string {
 func (this *XmlDoc) GetURL() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.URL)))
 }
+/*
 func (this *XmlDoc) GetCharset() int {
 	return int(this.handler.charset)
 }
+*/
 func (this *XmlDoc) GetDict() *XmlDict {
 	if this.handler.dict == nil {
 		return nil
@@ -179,12 +194,16 @@ func (this *XmlDoc) GetDict() *XmlDict {
 	this._dict.handler = (C.xmlDictPtr)(unsafe.Pointer(this.handler.dict))
 	return this._dict
 }
+/*
 func (this *XmlDoc) GetParseFlags() int {
 	return int(this.handler.parseFlags)
 }
+*/
+/*
 func (this *XmlDoc) GetProperties() int {
 	return int(this.handler.properties)
 }
+*/
 type XmlDtd struct {
 	handler C.xmlDtdPtr
 	// _private void* // Private

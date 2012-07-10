@@ -7,25 +7,63 @@ import "C"
 import "unsafe"
 
 
+
 /*
+	Element wellFormed not recognized getter for type int 
+	Element replaceEntities not recognized getter for type int 
+	Element standalone not recognized getter for type int 
+	Element html not recognized getter for type int 
+	Element inputNr not recognized getter for type int 
+	Element inputMax not recognized getter for type int 
 	Element inputTab has not registered type xmlParserInputPtr* 
 	Element inputTab not recognized getter for type xmlParserInputPtr* 
+	Element nodeNr not recognized getter for type int 
+	Element nodeMax not recognized getter for type int 
 	Element nodeTab has not registered type xmlNodePtr* 
 	Element nodeTab not recognized getter for type xmlNodePtr* 
+	Element record_info not recognized getter for type int 
 	Element node_seq has not registered type xmlParserNodeInfoSeq 
 	Element node_seq not recognized getter for type xmlParserNodeInfoSeq 
+	Element errNo not recognized getter for type int 
+	Element hasExternalSubset not recognized getter for type int 
+	Element hasPErefs not recognized getter for type int 
+	Element external not recognized getter for type int 
+	Element valid not recognized getter for type int 
+	Element validate not recognized getter for type int 
 	Element vctxt has not registered type xmlValidCtxt 
 	Element vctxt not recognized getter for type xmlValidCtxt 
 	Element instate has not registered type xmlParserInputState 
 	Element instate not recognized getter for type xmlParserInputState 
+	Element token not recognized getter for type int 
+	Element nameNr not recognized getter for type int 
+	Element nameMax not recognized getter for type int 
 	Element nameTab has not registered type xmlChar** 
 	Element nameTab not recognized getter for type xmlChar** 
 	Element nbChars has not registered type long 
 	Element nbChars not recognized getter for type long 
 	Element checkIndex has not registered type long 
 	Element checkIndex not recognized getter for type long 
+	Element keepBlanks not recognized getter for type int 
+	Element disableSAX not recognized getter for type int 
+	Element inSubset not recognized getter for type int 
+	Element spaceNr not recognized getter for type int 
+	Element spaceMax not recognized getter for type int 
+	Element depth not recognized getter for type int 
+	Element charset not recognized getter for type int 
+	Element nodelen not recognized getter for type int 
+	Element nodemem not recognized getter for type int 
+	Element pedantic not recognized getter for type int 
+	Element loadsubset not recognized getter for type int 
+	Element linenumbers not recognized getter for type int 
+	Element recovery not recognized getter for type int 
+	Element progressive not recognized getter for type int 
 	Element atts has not registered type xmlChar** 
 	Element atts not recognized getter for type xmlChar** 
+	Element maxatts not recognized getter for type int 
+	Element docdict not recognized getter for type int 
+	Element sax2 not recognized getter for type int 
+	Element nsNr not recognized getter for type int 
+	Element nsMax not recognized getter for type int 
 	Element nsTab has not registered type xmlChar** 
 	Element nsTab not recognized getter for type xmlChar** 
 	Element pushTab has not registered type void** 
@@ -34,6 +72,11 @@ import "unsafe"
 	Element attsDefault not recognized getter for type xmlHashTablePtr 
 	Element attsSpecial has not registered type xmlHashTablePtr 
 	Element attsSpecial not recognized getter for type xmlHashTablePtr 
+	Element nsWellFormed not recognized getter for type int 
+	Element options not recognized getter for type int 
+	Element dictNames not recognized getter for type int 
+	Element freeElemsNr not recognized getter for type int 
+	Element freeAttrsNr not recognized getter for type int 
 	Element freeAttrs has not registered type xmlAttrPtr 
 	Element freeAttrs not recognized getter for type xmlAttrPtr 
 	Element lastError has not registered type xmlError 
@@ -46,6 +89,8 @@ import "unsafe"
 	Element sizeentities not recognized getter for type unsigned long 
 	Element nodeInfo has not registered type xmlParserNodeInfo* 
 	Element nodeInfo not recognized getter for type xmlParserNodeInfo* 
+	Element nodeInfoNr not recognized getter for type int 
+	Element nodeInfoMax not recognized getter for type int 
 	Element nodeInfoTab has not registered type xmlParserNodeInfo* 
 	Element nodeInfoTab not recognized getter for type xmlParserNodeInfo* 
 
@@ -86,24 +131,32 @@ func (this *XmlParserCtxt) GetMyDoc() *XmlDoc {
 	this._myDoc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.myDoc))
 	return this._myDoc
 }
+/*
 func (this *XmlParserCtxt) GetWellFormed() int {
 	return int(this.handler.wellFormed)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetReplaceEntities() int {
 	return int(this.handler.replaceEntities)
 }
+*/
 func (this *XmlParserCtxt) GetVersion() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlParserCtxt) GetEncoding() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
+/*
 func (this *XmlParserCtxt) GetStandalone() int {
 	return int(this.handler.standalone)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetHtml() int {
 	return int(this.handler.html)
 }
+*/
 func (this *XmlParserCtxt) GetInput() *XmlParserInput {
 	if this.handler.input == nil {
 		return nil
@@ -114,12 +167,16 @@ func (this *XmlParserCtxt) GetInput() *XmlParserInput {
 	this._input.handler = (C.xmlParserInputPtr)(unsafe.Pointer(this.handler.input))
 	return this._input
 }
+/*
 func (this *XmlParserCtxt) GetInputNr() int {
 	return int(this.handler.inputNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetInputMax() int {
 	return int(this.handler.inputMax)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetInputTab() xmlParserInputPtr* {
 	return int(this.handler.inputTab)
@@ -135,43 +192,61 @@ func (this *XmlParserCtxt) GetNode() *XmlNode {
 	this._node.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.node))
 	return this._node
 }
+/*
 func (this *XmlParserCtxt) GetNodeNr() int {
 	return int(this.handler.nodeNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNodeMax() int {
 	return int(this.handler.nodeMax)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetNodeTab() xmlNodePtr* {
 	return int(this.handler.nodeTab)
 }
 */
+/*
 func (this *XmlParserCtxt) GetRecord_info() int {
 	return int(this.handler.record_info)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetNode_seq() xmlParserNodeInfoSeq {
 	return int(this.handler.node_seq)
 }
 */
+/*
 func (this *XmlParserCtxt) GetErrNo() int {
 	return int(this.handler.errNo)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetHasExternalSubset() int {
 	return int(this.handler.hasExternalSubset)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetHasPErefs() int {
 	return int(this.handler.hasPErefs)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetExternal() int {
 	return int(this.handler.external)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetValid() int {
 	return int(this.handler.valid)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetValidate() int {
 	return int(this.handler.validate)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetVctxt() xmlValidCtxt {
 	return int(this.handler.vctxt)
@@ -182,21 +257,27 @@ func (this *XmlParserCtxt) GetInstate() xmlParserInputState {
 	return int(this.handler.instate)
 }
 */
+/*
 func (this *XmlParserCtxt) GetToken() int {
 	return int(this.handler.token)
 }
+*/
 func (this *XmlParserCtxt) GetDirectory() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.directory)))
 }
 func (this *XmlParserCtxt) GetName() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
+/*
 func (this *XmlParserCtxt) GetNameNr() int {
 	return int(this.handler.nameNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNameMax() int {
 	return int(this.handler.nameMax)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetNameTab() xmlChar** {
 	return int(this.handler.nameTab)
@@ -212,15 +293,21 @@ func (this *XmlParserCtxt) GetCheckIndex() long {
 	return int(this.handler.checkIndex)
 }
 */
+/*
 func (this *XmlParserCtxt) GetKeepBlanks() int {
 	return int(this.handler.keepBlanks)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetDisableSAX() int {
 	return int(this.handler.disableSAX)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetInSubset() int {
 	return int(this.handler.inSubset)
 }
+*/
 func (this *XmlParserCtxt) GetIntSubName() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.intSubName)))
 }
@@ -230,15 +317,21 @@ func (this *XmlParserCtxt) GetExtSubURI() string {
 func (this *XmlParserCtxt) GetExtSubSystem() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubSystem)))
 }
+/*
 func (this *XmlParserCtxt) GetSpaceNr() int {
 	return int(this.handler.spaceNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetSpaceMax() int {
 	return int(this.handler.spaceMax)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetDepth() int {
 	return int(this.handler.depth)
 }
+*/
 func (this *XmlParserCtxt) GetEntity() *XmlParserInput {
 	if this.handler.entity == nil {
 		return nil
@@ -249,30 +342,46 @@ func (this *XmlParserCtxt) GetEntity() *XmlParserInput {
 	this._entity.handler = (C.xmlParserInputPtr)(unsafe.Pointer(this.handler.entity))
 	return this._entity
 }
+/*
 func (this *XmlParserCtxt) GetCharset() int {
 	return int(this.handler.charset)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNodelen() int {
 	return int(this.handler.nodelen)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNodemem() int {
 	return int(this.handler.nodemem)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetPedantic() int {
 	return int(this.handler.pedantic)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetLoadsubset() int {
 	return int(this.handler.loadsubset)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetLinenumbers() int {
 	return int(this.handler.linenumbers)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetRecovery() int {
 	return int(this.handler.recovery)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetProgressive() int {
 	return int(this.handler.progressive)
 }
+*/
 func (this *XmlParserCtxt) GetDict() *XmlDict {
 	if this.handler.dict == nil {
 		return nil
@@ -288,12 +397,16 @@ func (this *XmlParserCtxt) GetAtts() xmlChar** {
 	return int(this.handler.atts)
 }
 */
+/*
 func (this *XmlParserCtxt) GetMaxatts() int {
 	return int(this.handler.maxatts)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetDocdict() int {
 	return int(this.handler.docdict)
 }
+*/
 func (this *XmlParserCtxt) GetStr_xml() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml)))
 }
@@ -303,15 +416,21 @@ func (this *XmlParserCtxt) GetStr_xmlns() string {
 func (this *XmlParserCtxt) GetStr_xml_ns() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml_ns)))
 }
+/*
 func (this *XmlParserCtxt) GetSax2() int {
 	return int(this.handler.sax2)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNsNr() int {
 	return int(this.handler.nsNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNsMax() int {
 	return int(this.handler.nsMax)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetNsTab() xmlChar** {
 	return int(this.handler.nsTab)
@@ -332,18 +451,26 @@ func (this *XmlParserCtxt) GetAttsSpecial() xmlHashTablePtr {
 	return int(this.handler.attsSpecial)
 }
 */
+/*
 func (this *XmlParserCtxt) GetNsWellFormed() int {
 	return int(this.handler.nsWellFormed)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetOptions() int {
 	return int(this.handler.options)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetDictNames() int {
 	return int(this.handler.dictNames)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetFreeElemsNr() int {
 	return int(this.handler.freeElemsNr)
 }
+*/
 func (this *XmlParserCtxt) GetFreeElems() *XmlNode {
 	if this.handler.freeElems == nil {
 		return nil
@@ -354,9 +481,11 @@ func (this *XmlParserCtxt) GetFreeElems() *XmlNode {
 	this._freeElems.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.freeElems))
 	return this._freeElems
 }
+/*
 func (this *XmlParserCtxt) GetFreeAttrsNr() int {
 	return int(this.handler.freeAttrsNr)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetFreeAttrs() xmlAttrPtr {
 	return int(this.handler.freeAttrs)
@@ -387,12 +516,16 @@ func (this *XmlParserCtxt) GetNodeInfo() xmlParserNodeInfo* {
 	return int(this.handler.nodeInfo)
 }
 */
+/*
 func (this *XmlParserCtxt) GetNodeInfoNr() int {
 	return int(this.handler.nodeInfoNr)
 }
+*/
+/*
 func (this *XmlParserCtxt) GetNodeInfoMax() int {
 	return int(this.handler.nodeInfoMax)
 }
+*/
 /*
 func (this *XmlParserCtxt) GetNodeInfoTab() xmlParserNodeInfo* {
 	return int(this.handler.nodeInfoTab)
@@ -401,10 +534,15 @@ func (this *XmlParserCtxt) GetNodeInfoTab() xmlParserNodeInfo* {
 /*
 	Element buf has not registered type xmlParserInputBufferPtr 
 	Element buf not recognized getter for type xmlParserInputBufferPtr 
+	Element length not recognized getter for type int 
+	Element line not recognized getter for type int 
+	Element col not recognized getter for type int 
 	Element consumed has not registered type unsigned long 
 	Element consumed not recognized getter for type unsigned long 
 	Element free has not registered type xmlParserInputDeallocate 
 	Element free not recognized getter for type xmlParserInputDeallocate 
+	Element standalone not recognized getter for type int 
+	Element id not recognized getter for type int 
 
 */
 type XmlParserInput struct {
@@ -430,15 +568,21 @@ func (this *XmlParserInput) GetCur() string {
 func (this *XmlParserInput) GetEnd() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.end)))
 }
+/*
 func (this *XmlParserInput) GetLength() int {
 	return int(this.handler.length)
 }
+*/
+/*
 func (this *XmlParserInput) GetLine() int {
 	return int(this.handler.line)
 }
+*/
+/*
 func (this *XmlParserInput) GetCol() int {
 	return int(this.handler.col)
 }
+*/
 /*
 func (this *XmlParserInput) GetConsumed() unsigned long {
 	return int(this.handler.consumed)
@@ -455,12 +599,16 @@ func (this *XmlParserInput) GetEncoding() string {
 func (this *XmlParserInput) GetVersion() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
+/*
 func (this *XmlParserInput) GetStandalone() int {
 	return int(this.handler.standalone)
 }
+*/
+/*
 func (this *XmlParserInput) GetId() int {
 	return int(this.handler.id)
 }
+*/
 /*
 	Element internalSubset has not registered type internalSubsetSAXFunc 
 	Element internalSubset not recognized getter for type internalSubsetSAXFunc 
