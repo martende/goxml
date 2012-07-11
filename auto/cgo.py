@@ -51,6 +51,11 @@ FUNC_DESCS = (
 	('f','UTF8ToHtml',None,'out'),('CALC',create_buffer_as('in',3)),
 	('r','UTF8ToHtml',None,None),('CALC',return_mapper('out','ret')),
 	
+	('f','htmlEncodeEntities',None,'inlen'),('CALC',calc_len('in')),
+	('f','htmlEncodeEntities',None,'outlen'),('CALC',calc_len('in')),
+	('f','htmlEncodeEntities',None,'out'),('CALC',create_buffer_as('in',3)),
+	('r','htmlEncodeEntities',None,None),('CALC',return_mapper('out','ret')),
+	
 	('f','htmlCreateMemoryParserCtxt',None,'size'),('CALC',calc_len('buffer')),
 	('r','htmlCreateMemoryParserCtxt',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
@@ -68,6 +73,8 @@ FUNC_DESCS = (
 	('f','htmlCtxtReadMemory',None,'size'),('CALC',calc_len('buffer')),
 	('r','htmlCtxtReadMemory',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
+	('f','htmlParseChunk',None,'size'),('CALC',calc_len('chunk')),
+	
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
 	('s','xmlDocPtr',None,'ids'),('PRIVATE'),
@@ -83,7 +90,7 @@ FUNC_DESCS = (
 	
 )
 getHandler =  lambda n,t:"c_%s := %s.handler" % (n,n)
-getConverter = lambda n,t:'c_%s := C.%s(%s)' % (n,t,n)
+getConverter = lambda n,t:'c_%s := %s(%s)' % (n,c2goc(t),n)
 
 # The standard C numeric types are available under the names C.char, C.schar (signed char), 
 # C.uchar (unsigned char), C.short, C.ushort (unsigned short), C.int, C.uint (unsigned int), C.long, C.ulong (unsigned long), C.longlong (long long), C.ulonglong (unsigned long long), C.float, C.double. 
@@ -91,9 +98,11 @@ getConverter = lambda n,t:'c_%s := C.%s(%s)' % (n,t,n)
 def c2goc(t):
 	return {
 		'unsigned char*' : "*C.uchar",
+		'unsigned int'	: "C.uint",
+		'int'	: "C.int",
 		'char*' : "*C.char",
 		'xmlChar*' : "*C.xmlChar"
-	}.get(t)
+	}.get(t,"C."+t)
 	
 def toCharConverter(n,t):
 	return """c_%(n)s:= (%(t)s)(unsafe.Pointer(C.CString(%(n)s)))
@@ -107,7 +116,7 @@ if %(n)s !=nil { c_%(n)s = (C.%(t)s)(%(n)s.handler) }""" % {'n':n,'t':t}
 # returnConverter
 #
 def retNullOrObject(t,goRetType):
-	return 'if c_ret == nil {return nil}\nreturn &%s{handler:c_ret}' % goRetType  
+	return 'if c_ret == nil {return nil}\nreturn &%s{handler:(C.%s)(c_ret)}' % (goRetType,t)  
 def retObject(t,goRetType):
 	return "return %s(c_ret)" % goRetType
 def retString(t,goRetType):
@@ -133,7 +142,8 @@ TYPEALIAS = {
 	'struct _xmlNs*' : 'xmlNsPtr',
 	'struct _xmlSAXHandler*' : 'xmlSAXHandlerPtr',
 	'struct _xmlTextReader*' : 'xmlTextReaderPtr',
-	'htmlElemDesc*' : 'htmlElemDescPtr'
+	'htmlElemDesc*' : 'htmlElemDescPtr',
+	'htmlEntityDesc*' : 'htmlEntityDescPtr',
 }
 TYPEINFO = {
 	'xmlDtdPtr' : {
@@ -218,6 +228,12 @@ TYPEINFO = {
 		'exportStruct' : '_xmlDoc',
 		'c2GoConverter'	: c2GoConverter1,
 	},
+	'htmlEntityDescPtr' : {
+		'goArgType' : '*HtmlEntityDesc',
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
+		'exportStruct' : '_htmlEntityDesc'
+	},
 	'xmlSAXHandlerPtr' : {
 		'goArgType' : '*XmlSAXHandler',
 		'go2cConverter' : getNullOrHandler,
@@ -230,6 +246,11 @@ TYPEINFO = {
 		'returnConverter' : retObject,
 	},
 	'xmlCharEncoding' : ('alias','int'),
+	'unsigned int' : {
+		'goArgType' : 'uint',
+		'go2cConverter' : getConverter,
+		'returnConverter' : retObject,
+	},
 	'int' : {
 		'goArgType' : 'int',
 		'go2cConverter' : getConverter,
@@ -263,9 +284,38 @@ IMPORTS = (
 	'htmlReadFile',
 	'htmlCtxtReadFd',
 	'htmlCtxtReadFile',
-	'htmlCtxtReadIO',
-	'htmlCtxtReadMemory'
-	)
+	'SKIP#htmlCtxtReadIO',
+	'htmlCtxtReadMemory',
+	'SKIP#htmlReadIO',
+	'htmlCtxtReset',
+	'htmlCtxtUseOptions',
+	'htmlElementAllowedHere',
+	'htmlElementStatusHere',
+	'htmlEncodeEntities',
+	'htmlEntityLookup',
+	'htmlEntityValueLookup',
+	'htmlFreeParserCtxt',
+	'htmlHandleOmittedElem',
+	'htmlIsAutoClosed',
+	'htmlIsScriptAttribute',
+	'htmlNewParserCtxt',
+	'htmlNodeStatus',
+	'htmlParseCharRef',
+	'htmlParseChunk',
+	'htmlParseDoc',
+	'htmlParseDocument',
+	'htmlParseElement',
+	'htmlParseEntityRef',
+	'htmlParseFile',
+	'htmlReadDoc',
+	'htmlReadFd',
+	'htmlReadFile',
+	'SKIP#htmlReadIO',
+	'htmlReadMemory'
+	'htmlSAXParseDoc',
+	'htmlSAXParseFile'
+	'htmlTagLookup'
+)
 
 ALLI = (
 	'xmlDocCopyNode',
@@ -335,7 +385,8 @@ class FileConverter():
 		if dbData:
 			if (dbData[0] == 'CALC'):
 				goReturnType=dbData[1].getReturnType(self.calcArgType(dbData[1].arg(),sig),cReturnType)
-		
+		if cReturnType in TYPEALIAS:
+			cReturnType = TYPEALIAS[cReturnType]
 		if goReturnType is None:
 			try:
 				goReturnType = TYPEINFO[cReturnType]['goReturnType']
@@ -345,7 +396,7 @@ class FileConverter():
 				except:
 					#goArgType = ptype
 					goReturnType = cReturnType
-					errs.append('Warn: ReturnType %s Not defined' % (goReturnType))
+					errs.append('Warn[createFuncArgString]: ReturnType %s Not defined' % (goReturnType))
 		
 		for (pname,ptype,_) in sig[1]:
 			if pname is not None:
@@ -451,13 +502,16 @@ class FileConverter():
 				raise Exception("Not Implemented")
 			#goReturnType=dbData[1].getReturnType(self.calcArgType(dbData[1].arg(),sig),cReturnType)
 		elif cReturnType != 'void' :
-			
+			if cReturnType in TYPEALIAS:
+				cReturnType = TYPEALIAS[cReturnType]
+			if  'realType' in TYPEINFO[cReturnType]:
+				cReturnType = TYPEINFO[cReturnType]['realType']
 			returnConverter = None
 			try:
 				returnConverter = TYPEINFO[cReturnType]['returnConverter']
 			except:
 				returnConverter = lambda t,p:t
-				errs.append('Warn: type (%s) has no Return converter to Go' % (cReturnType))
+				errs.append('Warn[createCallLine]: type (%s) has no Return converter to Go' % (cReturnType))
 			 
 			goReturnType = None
 			try:
@@ -468,7 +522,7 @@ class FileConverter():
 				except:
 					#goArgType = ptype
 					goReturnType = cReturnType
-					errs.append('Warn[createCallLine]: ReturnType %s Not defined' % (goReturnType))
+					errs.append('Warn[createCallLine]: ReturnType %s found but not defined' % (goReturnType))
 			
 			returnBlock.append(returnConverter(cReturnType,goReturnType)) 
 		# Post Process Parameters
@@ -627,7 +681,7 @@ class FileConverter():
 			if goType == 'int':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn int(this.handler."+elName+")\n}\n"
-			if goType == 'byte':
+			elif goType == 'byte':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn byte(this.handler."+elName+")\n}\n"
 			elif goType== '*string':
@@ -651,7 +705,7 @@ class FileConverter():
 				self.unsafe=True
 			else:
 				errored = True
-				errs.append("Element %s not recognized getter for type %s " % (elName,elType))
+				errs.append("Element %s not recognized getter for elType:%s goType:%s" % (elName,elType,goType))
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn int(this.handler."+elName+")\n}\n"
 			

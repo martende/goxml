@@ -68,6 +68,14 @@ func (s *S) TestHtmlCtxtReadDoc(c *C) {
 	r,err:=goxml.HtmlCtxtReadDoc(nil,"<document></document>","http://baseurl/","",0)
 	c.Check(err, Not(Equals), nil)
 	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
+	
+	ctxt,_:=goxml.HtmlCreateMemoryParserCtxt("")
+	r,err=goxml.HtmlCtxtReadDoc(ctxt,"<html></html>","http://baseurl/","",0)
+	
+	c.Check(err, Equals, nil)
+	c.Check(r, Not(Equals), (*goxml.XmlDoc)(nil))
+	c.Check(ctxt.GetValid(), Equals, 1)
+	
 }
 
 func (s *S) TestHtmlCtxtReadFd(c *C) {
@@ -80,40 +88,57 @@ func (s *S) TestHtmlCtxtReadFile(c *C) {
 	r,err:=goxml.HtmlCtxtReadFile(nil,"file://tmp/noexists.html","UTF-8",goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET)
 	c.Check(err, Not(Equals), nil)
 	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
+	
+	ctxt:=goxml.HtmlNewParserCtxt()
+	r,err=goxml.HtmlCtxtReadFile(ctxt,"examples/test.html","UTF-8",goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET)
+	
+	c.Check(err, Equals, nil)
+	c.Check(r, Not(Equals), (*goxml.XmlDoc)(nil))
+	c.Check(ctxt.GetValid(), Equals, 1)
+	
 }
 
 
-func (s *S) test_htmlCtxtReadMemory(c *C) {
+func (s *S) TestHtmlCtxtReadMemory(c *C) {
+	ctxt,_:=goxml.HtmlCreateMemoryParserCtxt("")
+	r,err:=goxml.HtmlCtxtReadMemory(ctxt,"<html></html>","http://baseurl/","UTF-8",0)
+	
+	c.Check(err, Equals, nil)
+	c.Check(r, Not(Equals), (*goxml.XmlDoc)(nil))
+	c.Check(ctxt.GetValid(), Equals, 1)
 }
 
-func (s *S) test_htmlCtxtReset(c *C) {
+func (s *S) TestHtmlCtxtReset(c *C) {
 }
 
-func (s *S) test_htmlCtxtUseOptions(c *C) {
+func (s *S) TestHtmlCtxtUseOptions(c *C) {
 }
 
-func (s *S) test_htmlElementAllowedHere(c *C) {
+func (s *S) TestHtmlElementAllowedHere(c *C) {
 }
 
-func (s *S) test_htmlElementStatusHere(c *C) {
+func (s *S) TestHtmlElementStatusHere(c *C) {
 }
 
-func (s *S) test_htmlEncodeEntities(c *C) {
+func (s *S) TestHtmlEncodeEntities(c *C) {
 }
 
-func (s *S) test_htmlEntityLookup(c *C) {
+func (s *S) TestHtmlEntityLookup(c *C) {
+	// what is it i dont know
+	r:=goxml.HtmlEntityLookup("body")
+	c.Check(r, Equals, (*goxml.HtmlEntityDesc)(nil))
 }
 
-func (s *S) test_htmlEntityValueLookup(c *C) {
+func (s *S) TestHtmlEntityValueLookup(c *C) {
 }
 
-func (s *S) test_htmlHandleOmittedElem(c *C) {
+func (s *S) TestHtmlHandleOmittedElem(c *C) {
 }
 
-func (s *S) test_htmlIsAutoClosed(c *C) {
+func (s *S) TestHtmlIsAutoClosed(c *C) {
 }
 
-func (s *S) test_htmlIsScriptAttribute(c *C) {
+func (s *S) TestHtmlIsScriptAttribute(c *C) {
 }
 
 func (s *S) test_htmlNewParserCtxt(c *C) {

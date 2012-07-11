@@ -10,14 +10,32 @@ import "fmt"
 
 
 /*
+	Element value not recognized getter for elType:unsigned int goType:uint
+
+*/
+type HtmlEntityDesc struct {
+	handler C.htmlEntityDescPtr
+}
+/*
+func (this *HtmlEntityDesc) GetValue() uint {
+	return int(this.handler.value)
+}
+*/
+func (this *HtmlEntityDesc) GetName() string {
+	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
+}
+func (this *HtmlEntityDesc) GetDesc() string {
+	return C.GoString((*C.char)(unsafe.Pointer(this.handler.desc)))
+}
+/*
 	Element subelts has not registered type char** 
-	Element subelts not recognized getter for type char** 
+	Element subelts not recognized getter for elType:char** goType:char**
 	Element attrs_opt has not registered type char** 
-	Element attrs_opt not recognized getter for type char** 
+	Element attrs_opt not recognized getter for elType:char** goType:char**
 	Element attrs_depr has not registered type char** 
-	Element attrs_depr not recognized getter for type char** 
+	Element attrs_depr not recognized getter for elType:char** goType:char**
 	Element attrs_req has not registered type char** 
-	Element attrs_req not recognized getter for type char** 
+	Element attrs_req not recognized getter for elType:char** goType:char**
 
 */
 type HtmlElemDesc struct {
@@ -75,6 +93,35 @@ func (this *HtmlElemDesc) GetAttrs_req() char** {
 */
 
 /* 
+	   Function: htmlIsScriptAttribute
+	   ReturnType: int
+	   Args: (('name', ['xmlChar', '*'], None),)
+*/
+func HtmlIsScriptAttribute(name string) int {
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_ret := C.htmlIsScriptAttribute(c_name)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlHandleOmittedElem
+	   ReturnType: int
+	   Args: (('val', ['int'], None),)
+*/
+func HtmlHandleOmittedElem(val int) int {
+	c_val := C.int(val)
+
+	c_ret := C.htmlHandleOmittedElem(c_val)
+
+
+
+	return int(c_ret)
+}
+/* 
 	   Function: htmlCtxtReadDoc
 	   ReturnType: htmlDocPtr
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('cur', ['xmlChar', '*'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
@@ -98,6 +145,44 @@ func HtmlCtxtReadDoc(ctxt *XmlParserCtxt,cur string,URL string,encoding string,o
 		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: htmlParseFile
+	   ReturnType: htmlDocPtr
+	   Args: (('filename', ['char', '*'], None), ('encoding', ['char', '*'], None))
+*/
+func HtmlParseFile(filename string,encoding string) *XmlDoc {
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+
+	c_ret := C.htmlParseFile(c_filename,c_encoding)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+}
+/* 
+	   Function: htmlReadFd
+	   ReturnType: htmlDocPtr
+	   Args: (('fd', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func HtmlReadFd(fd int,URL string,encoding string,options int) *XmlDoc {
+	c_fd := C.int(fd)
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.htmlReadFd(c_fd,c_URL,c_encoding,c_options)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 }
 /* 
 	   Function: htmlAutoCloseTag
@@ -155,42 +240,37 @@ func HtmlCreateMemoryParserCtxt(buffer string) (g_ret *XmlParserCtxt,err error) 
 	return
 }
 /* 
-	   Function: htmlCtxtReadIO
-	   ReturnType: htmlDocPtr
-	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('ioread', ['xmlInputReadCallback'], None), ('ioclose', ['xmlInputCloseCallback'], None), ('ioctx', ['void', '*'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+	   Function: htmlCtxtReset
+	   ReturnType: void
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None),)
 */
-/*
+func HtmlCtxtReset(ctxt *XmlParserCtxt) {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
 
-	Warn: ioread xmlInputReadCallback Not defined
-	Warn: ioclose xmlInputCloseCallback Not defined
-	Warn: ioctx void* Not defined
-	Warn: ioread xmlInputReadCallback No converter to C(go2cConverter)
-	Warn: ioclose xmlInputCloseCallback No converter to C(go2cConverter)
-	Warn: ioctx void* No converter to C(go2cConverter)
+	C.htmlCtxtReset(c_ctxt)
 
-func HtmlCtxtReadIO(ctxt *XmlParserCtxt,ioread xmlInputReadCallback,ioclose xmlInputCloseCallback,ioctx void*,URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
-	var c_ctxt C.xmlParserCtxtPtr=nil
-	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
-	ioread
-	ioclose
-	ioctx
-	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
-	defer C.free(unsafe.Pointer(c_URL))
-	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
-	defer C.free(unsafe.Pointer(c_encoding))
-	c_options := C.int(options)
 
-	c_ret := C.htmlCtxtReadIO(c_ctxt,c_ioread,c_ioclose,c_ioctx,c_URL,c_encoding,c_options)
 
-	if c_ret == nil {
-		err = fmt.Errorf("htmlCtxtReadIO errno %d" ,c_ret)
-	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
-	}
-	return
+
 }
-
+/* 
+	   Function: htmlElementAllowedHere
+	   ReturnType: int
+	   Args: ((None, ['htmlElemDesc', '*'], None), (None, ['xmlChar', '*'], None))
 */
+func HtmlElementAllowedHere(arg1 *HtmlElemDesc,arg2 string) int {
+	var c_arg1 C.htmlElemDescPtr=nil
+	if arg1 !=nil { c_arg1 = (C.htmlElemDescPtr)(arg1.handler) }
+	c_arg2:= (*C.xmlChar)(unsafe.Pointer(C.CString(arg2)))
+	defer C.free(unsafe.Pointer(c_arg2))
+
+	c_ret := C.htmlElementAllowedHere(c_arg1,c_arg2)
+
+
+
+	return int(c_ret)
+}
 /* 
 	   Function: htmlCreatePushParserCtxt
 	   ReturnType: htmlParserCtxtPtr
@@ -213,6 +293,179 @@ func HtmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string,en
 		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: htmlIsAutoClosed
+	   ReturnType: int
+	   Args: (('doc', ['htmlDocPtr'], None), ('elem', ['htmlNodePtr'], None))
+*/
+func HtmlIsAutoClosed(doc *XmlDoc,elem *XmlNode) int {
+	var c_doc C.htmlDocPtr=nil
+	if doc !=nil { c_doc = (C.htmlDocPtr)(doc.handler) }
+	var c_elem C.htmlNodePtr=nil
+	if elem !=nil { c_elem = (C.htmlNodePtr)(elem.handler) }
+
+	c_ret := C.htmlIsAutoClosed(c_doc,c_elem)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlParseCharRef
+	   ReturnType: int
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None),)
+*/
+func HtmlParseCharRef(ctxt *XmlParserCtxt) int {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+
+	c_ret := C.htmlParseCharRef(c_ctxt)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlReadDoc
+	   ReturnType: htmlDocPtr
+	   Args: (('cur', ['xmlChar', '*'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func HtmlReadDoc(cur string,URL string,encoding string,options int) *XmlDoc {
+	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+	defer C.free(unsafe.Pointer(c_cur))
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.htmlReadDoc(c_cur,c_URL,c_encoding,c_options)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+}
+/* 
+	   Function: htmlParseDocument
+	   ReturnType: int
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None),)
+*/
+func HtmlParseDocument(ctxt *XmlParserCtxt) int {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+
+	c_ret := C.htmlParseDocument(c_ctxt)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlNodeStatus
+	   ReturnType: htmlStatus
+	   Args: ((None, ['htmlNodePtr'], None), (None, ['int'], None))
+*/
+func HtmlNodeStatus(arg1 *XmlNode,arg2 int) int {
+	var c_arg1 C.htmlNodePtr=nil
+	if arg1 !=nil { c_arg1 = (C.htmlNodePtr)(arg1.handler) }
+	c_arg2 := C.int(arg2)
+
+	c_ret := C.htmlNodeStatus(c_arg1,c_arg2)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlParseChunk
+	   ReturnType: int
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
+*/
+func HtmlParseChunk(ctxt *XmlParserCtxt,chunk string,terminate int) int {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+	defer C.free(unsafe.Pointer(c_chunk))
+	c_terminate := C.int(terminate)
+	c_size:=C.int(len(chunk)*1+1)
+	c_ret := C.htmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlParseEntityRef
+	   ReturnType: htmlEntityDesc*
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None), ('str', ['xmlChar', '**'], None))
+*/
+/*
+
+	Warn: str xmlChar** Not defined
+	Warn: str xmlChar** No converter to C(go2cConverter)
+
+func HtmlParseEntityRef(ctxt *XmlParserCtxt,str xmlChar**) *HtmlEntityDesc {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+	str
+
+	c_ret := C.htmlParseEntityRef(c_ctxt,c_str)
+
+
+
+	if c_ret == nil {return nil}
+	return &HtmlEntityDesc{handler:(C.htmlEntityDescPtr)(c_ret)}
+}
+
+*/
+/* 
+	   Function: htmlElementStatusHere
+	   ReturnType: htmlStatus
+	   Args: ((None, ['htmlElemDesc', '*'], None), (None, ['htmlElemDesc', '*'], None))
+*/
+func HtmlElementStatusHere(arg1 *HtmlElemDesc,arg2 *HtmlElemDesc) int {
+	var c_arg1 C.htmlElemDescPtr=nil
+	if arg1 !=nil { c_arg1 = (C.htmlElemDescPtr)(arg1.handler) }
+	var c_arg2 C.htmlElemDescPtr=nil
+	if arg2 !=nil { c_arg2 = (C.htmlElemDescPtr)(arg2.handler) }
+
+	c_ret := C.htmlElementStatusHere(c_arg1,c_arg2)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: htmlEntityValueLookup
+	   ReturnType: htmlEntityDesc*
+	   Args: (('value', ['unsigned int'], None),)
+*/
+func HtmlEntityValueLookup(value uint) *HtmlEntityDesc {
+	c_value := C.uint(value)
+
+	c_ret := C.htmlEntityValueLookup(c_value)
+
+
+
+	if c_ret == nil {return nil}
+	return &HtmlEntityDesc{handler:(C.htmlEntityDescPtr)(c_ret)}
+}
+/* 
+	   Function: htmlParseElement
+	   ReturnType: void
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None),)
+*/
+func HtmlParseElement(ctxt *XmlParserCtxt) {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+
+	C.htmlParseElement(c_ctxt)
+
+
+
+
 }
 /* 
 	   Function: UTF8ToHtml
@@ -242,6 +495,37 @@ func UTF8ToHtml(in string) (g_out string,err error) {
 	return
 }
 /* 
+	   Function: htmlEntityLookup
+	   ReturnType: htmlEntityDesc*
+	   Args: (('name', ['xmlChar', '*'], None),)
+*/
+func HtmlEntityLookup(name string) *HtmlEntityDesc {
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_ret := C.htmlEntityLookup(c_name)
+
+
+
+	if c_ret == nil {return nil}
+	return &HtmlEntityDesc{handler:(C.htmlEntityDescPtr)(c_ret)}
+}
+/* 
+	   Function: htmlFreeParserCtxt
+	   ReturnType: void
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None),)
+*/
+func HtmlFreeParserCtxt(ctxt *XmlParserCtxt) {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+
+	C.htmlFreeParserCtxt(c_ctxt)
+
+
+
+
+}
+/* 
 	   Function: htmlCtxtReadMemory
 	   ReturnType: htmlDocPtr
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
@@ -265,6 +549,24 @@ func HtmlCtxtReadMemory(ctxt *XmlParserCtxt,buffer string,URL string,encoding st
 		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: htmlParseDoc
+	   ReturnType: htmlDocPtr
+	   Args: (('cur', ['xmlChar', '*'], None), ('encoding', ['char', '*'], None))
+*/
+func HtmlParseDoc(cur string,encoding string) *XmlDoc {
+	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+	defer C.free(unsafe.Pointer(c_cur))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+
+	c_ret := C.htmlParseDoc(c_cur,c_encoding)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 }
 /* 
 	   Function: htmlReadFile
@@ -309,6 +611,65 @@ func HtmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,option
 		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: htmlEncodeEntities
+	   ReturnType: int
+	   Args: (('out', ['unsigned char', '*'], None), ('outlen', ['int', '*'], None), ('in', ['unsigned char', '*'], None), ('inlen', ['int', '*'], None), ('quoteChar', ['int'], None))
+*/
+func HtmlEncodeEntities(in string,quoteChar int) (g_out string,err error) {
+	c_in:= (*C.uchar)(unsafe.Pointer(C.CString(in)))
+	defer C.free(unsafe.Pointer(c_in))
+	c_quoteChar := C.int(quoteChar)
+		c_out:= (*C.uchar)(C.calloc(  (C.size_t)( len(in)*3+ 1 )  ,1))
+		defer C.free(unsafe.Pointer(c_out))
+	c0_outlen:=C.int(len(in)*1+1)
+	c_outlen:=&c0_outlen
+	c0_inlen:=C.int(len(in)*1+1)
+	c_inlen:=&c0_inlen
+	c_ret := C.htmlEncodeEntities(c_out,c_outlen,c_in,c_inlen,c_quoteChar)
+
+	if c_ret != 0 {
+		err = fmt.Errorf("htmlEncodeEntities errno %d" ,c_ret)
+	} else {
+		if c_out == nil {
+			g_out=""
+		} else {
+			g_out = C.GoString((*C.char)(unsafe.Pointer(c_out)))
+		}
+	}
+	return
+}
+/* 
+	   Function: htmlNewParserCtxt
+	   ReturnType: htmlParserCtxtPtr
+	   Args: ((None, ['void'], None),)
+*/
+func HtmlNewParserCtxt() *XmlParserCtxt {
+
+
+	c_ret := C.htmlNewParserCtxt()
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+}
+/* 
+	   Function: htmlCtxtUseOptions
+	   ReturnType: int
+	   Args: (('ctxt', ['htmlParserCtxtPtr'], None), ('options', ['int'], None))
+*/
+func HtmlCtxtUseOptions(ctxt *XmlParserCtxt,options int) int {
+	var c_ctxt C.htmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
+	c_options := C.int(options)
+
+	c_ret := C.htmlCtxtUseOptions(c_ctxt,c_options)
+
+
+
+	return int(c_ret)
 }
 /* 
 	   Function: htmlCtxtReadFd
