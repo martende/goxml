@@ -49,16 +49,29 @@ func (s *S) TesthtmlAutoCloseTag(c *C) {
 	//fmt.Printf("R=%d",r)
 }
 
-func (s *S) test_htmlCreateMemoryParserCtxt(c *C) {
+func (s *S) TesthtmlCreateMemoryParserCtxt(c *C) {
+	r1,err1:=goxml.HtmlCreateMemoryParserCtxt("")
+	c.Check(err1, Equals, nil)
+	c.Check(r1, Not(Equals), nil)
+	r2,err2:=goxml.HtmlCreateMemoryParserCtxt("ichwisenicht")
+	c.Check(err2, Equals, nil)
+	c.Check(r2, Not(Equals), nil)
 }
 
-func (s *S) test_htmlCreatePushParserCtxt(c *C) {
+func (s *S) TestHtmlCreatePushParserCtxt(c *C) {
+	r,err:=goxml.HtmlCreatePushParserCtxt(nil,"<htm","filename.txt",goxml.XML_CHAR_ENCODING_UTF8)
+	c.Check(err, Equals, nil)
+	c.Check(r, Not(Equals), nil)
 }
 
 func (s *S) test_htmlCtxtReadDoc(c *C) {
+	r,err:=goxml.HtmlCtxtReadDoc(nil,"<document?","http://baseurl/","",0)
+	c.Check(err, Equals, nil)
+	c.Check(r, Not(Equals), nil)
 }
 
 func (s *S) test_htmlCtxtReadFile(c *C) {
+	
 }
 
 func (s *S) test_htmlCtxtReadMemory(c *C) {
@@ -124,7 +137,18 @@ func (s *S) test_htmlParseFile(c *C) {
 func (s *S) test_htmlReadDoc(c *C) {
 }
 
-func (s *S) test_htmlReadFile(c *C) {
+func (s *S) TestHtmlReadFile(c *C) {
+	doc,err:=goxml.HtmlReadFile("file://tmp/noexists.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET);
+	c.Check(doc, Equals, (*goxml.XmlDoc)(nil))
+	c.Check(err, Not(Equals), nil)
+	
+	doc,err=goxml.HtmlReadFile("./examples/test.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET);
+	c.Check(doc, Not(Equals), (*goxml.XmlDoc)(nil))
+	c.Check(err, Equals, nil)
+	
+	doc,err=goxml.HtmlReadFile("./examples/test_broken.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET);
+	c.Check(doc, Not(Equals), (*goxml.XmlDoc)(nil))
+	c.Check(err, Equals, nil)
 }
 
 func (s *S) test_htmlReadMemory(c *C) {

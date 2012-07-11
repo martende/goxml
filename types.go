@@ -19,12 +19,4 @@ type XmlTextReader struct {
 type XmlDict struct {
 	handler C.xmlDictPtr
 }
-/*
-type XmlParserCtxt struct {
-	handler C.xmlParserCtxtPtr
-}
 
-func (this *XmlParserCtxt) GetValid() int{
-	return int(this.handler.valid)
-}
-*/

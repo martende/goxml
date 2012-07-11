@@ -75,6 +75,31 @@ func (this *HtmlElemDesc) GetAttrs_req() char** {
 */
 
 /* 
+	   Function: htmlCtxtReadDoc
+	   ReturnType: htmlDocPtr
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('cur', ['xmlChar', '*'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func HtmlCtxtReadDoc(ctxt *XmlParserCtxt,cur string,URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
+	var c_ctxt C.xmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
+	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+	defer C.free(unsafe.Pointer(c_cur))
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.htmlCtxtReadDoc(c_ctxt,c_cur,c_URL,c_encoding,c_options)
+
+	if c_ret == nil {
+		err = fmt.Errorf("htmlCtxtReadDoc errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
 	   Function: htmlAutoCloseTag
 	   ReturnType: int
 	   Args: (('doc', ['htmlDocPtr'], None), ('name', ['xmlChar', '*'], None), ('elem', ['htmlNodePtr'], None))
@@ -116,16 +141,41 @@ func HtmlAttrAllowed(arg1 *HtmlElemDesc,arg2 string,arg3 int) int {
 	   ReturnType: htmlParserCtxtPtr
 	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None))
 */
-func HtmlCreateMemoryParserCtxt(buffer string) *XmlParserCtxt {
+func HtmlCreateMemoryParserCtxt(buffer string) (g_ret *XmlParserCtxt,err error) {
 	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
 	defer C.free(unsafe.Pointer(c_buffer))
 	c_size:=C.int(len(buffer)*1+1)
 	c_ret := C.htmlCreateMemoryParserCtxt(c_buffer,c_size)
 
+	if c_ret == nil {
+		err = fmt.Errorf("htmlCreateMemoryParserCtxt errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: htmlCreatePushParserCtxt
+	   ReturnType: htmlParserCtxtPtr
+	   Args: (('sax', ['htmlSAXHandlerPtr'], None), ('user_data', ['void', '*'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('filename', ['char', '*'], None), ('enc', ['xmlCharEncoding'], None))
+*/
+func HtmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string,enc int) (g_ret *XmlParserCtxt,err error) {
+	var c_sax C.htmlSAXHandlerPtr=nil
+	if sax !=nil { c_sax = (C.htmlSAXHandlerPtr)(sax.handler) }
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+	defer C.free(unsafe.Pointer(c_chunk))
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_enc := C.xmlCharEncoding(enc)
+	c_size:=C.int(len(chunk)*1+1)
+	c_ret := C.htmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename,c_enc)
 
-
-	if c_ret == nil {return nil}
-	return &XmlParserCtxt{handler:c_ret}
+	if c_ret == nil {
+		err = fmt.Errorf("htmlCreatePushParserCtxt errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+	}
+	return
 }
 /* 
 	   Function: UTF8ToHtml
@@ -151,6 +201,27 @@ func UTF8ToHtml(in string) (g_out string,err error) {
 		} else {
 			g_out = C.GoString((*C.char)(unsafe.Pointer(c_out)))
 		}
+	}
+	return
+}
+/* 
+	   Function: htmlReadFile
+	   ReturnType: htmlDocPtr
+	   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func HtmlReadFile(URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.htmlReadFile(c_URL,c_encoding,c_options)
+
+	if c_ret == nil {
+		err = fmt.Errorf("htmlReadFile errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
