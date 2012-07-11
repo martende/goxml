@@ -64,15 +64,24 @@ func (s *S) TestHtmlCreatePushParserCtxt(c *C) {
 	c.Check(r, Not(Equals), nil)
 }
 
-func (s *S) test_htmlCtxtReadDoc(c *C) {
-	r,err:=goxml.HtmlCtxtReadDoc(nil,"<document?","http://baseurl/","",0)
-	c.Check(err, Equals, nil)
-	c.Check(r, Not(Equals), nil)
+func (s *S) TestHtmlCtxtReadDoc(c *C) {
+	r,err:=goxml.HtmlCtxtReadDoc(nil,"<document></document>","http://baseurl/","",0)
+	c.Check(err, Not(Equals), nil)
+	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
 }
 
-func (s *S) test_htmlCtxtReadFile(c *C) {
-	
+func (s *S) TestHtmlCtxtReadFd(c *C) {
+	r,err:=goxml.HtmlCtxtReadFd(nil,10,"http://baseurl/","UTF-8",0)
+	c.Check(err, Not(Equals), nil)
+	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
 }
+
+func (s *S) TestHtmlCtxtReadFile(c *C) {
+	r,err:=goxml.HtmlCtxtReadFile(nil,"file://tmp/noexists.html","UTF-8",goxml.HTML_PARSE_NOBLANKS | goxml.HTML_PARSE_NOERROR | goxml.HTML_PARSE_NOWARNING | goxml.HTML_PARSE_NONET)
+	c.Check(err, Not(Equals), nil)
+	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
+}
+
 
 func (s *S) test_htmlCtxtReadMemory(c *C) {
 }

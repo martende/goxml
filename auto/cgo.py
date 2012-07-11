@@ -61,7 +61,12 @@ FUNC_DESCS = (
 	('r','htmlCtxtReadDoc',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
 	('r','htmlReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','htmlCtxtReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','htmlCtxtReadFd',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','htmlCtxtReadIO',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
+	('f','htmlCtxtReadMemory',None,'size'),('CALC',calc_len('buffer')),
+	('r','htmlCtxtReadMemory',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
@@ -256,6 +261,10 @@ IMPORTS = (
 	'htmlCreatePushParserCtxt',
 	'htmlCtxtReadDoc',
 	'htmlReadFile',
+	'htmlCtxtReadFd',
+	'htmlCtxtReadFile',
+	'htmlCtxtReadIO',
+	'htmlCtxtReadMemory'
 	)
 
 ALLI = (
