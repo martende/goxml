@@ -81,11 +81,11 @@ func (this *HtmlElemDesc) GetAttrs_req() char** {
 */
 func HtmlAutoCloseTag(doc *XmlDoc,name string,elem *XmlNode) int {
 	var c_doc C.htmlDocPtr=nil
-	if doc !=nil { c_doc = doc.handler }
+	if doc !=nil { c_doc = (C.htmlDocPtr)(doc.handler) }
 	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
 	defer C.free(unsafe.Pointer(c_name))
 	var c_elem C.htmlNodePtr=nil
-	if elem !=nil { c_elem = elem.handler }
+	if elem !=nil { c_elem = (C.htmlNodePtr)(elem.handler) }
 
 	c_ret := C.htmlAutoCloseTag(c_doc,c_name,c_elem)
 
@@ -100,7 +100,7 @@ func HtmlAutoCloseTag(doc *XmlDoc,name string,elem *XmlNode) int {
 */
 func HtmlAttrAllowed(arg1 *HtmlElemDesc,arg2 string,arg3 int) int {
 	var c_arg1 C.htmlElemDescPtr=nil
-	if arg1 !=nil { c_arg1 = arg1.handler }
+	if arg1 !=nil { c_arg1 = (C.htmlElemDescPtr)(arg1.handler) }
 	c_arg2:= (*C.xmlChar)(unsafe.Pointer(C.CString(arg2)))
 	defer C.free(unsafe.Pointer(c_arg2))
 	c_arg3 := C.int(arg3)
@@ -112,6 +112,22 @@ func HtmlAttrAllowed(arg1 *HtmlElemDesc,arg2 string,arg3 int) int {
 	return int(c_ret)
 }
 /* 
+	   Function: htmlCreateMemoryParserCtxt
+	   ReturnType: htmlParserCtxtPtr
+	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None))
+*/
+func HtmlCreateMemoryParserCtxt(buffer string) *XmlParserCtxt {
+	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
+	defer C.free(unsafe.Pointer(c_buffer))
+	c_size:=C.int(len(buffer)*1+1)
+	c_ret := C.htmlCreateMemoryParserCtxt(c_buffer,c_size)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlParserCtxt{handler:c_ret}
+}
+/* 
 	   Function: UTF8ToHtml
 	   ReturnType: int
 	   Args: (('out', ['unsigned char', '*'], None), ('outlen', ['int', '*'], None), ('in', ['unsigned char', '*'], None), ('inlen', ['int', '*'], None))
@@ -121,10 +137,10 @@ func UTF8ToHtml(in string) (g_out string,err error) {
 	defer C.free(unsafe.Pointer(c_in))
 		c_out:= (*C.uchar)(C.calloc(  (C.size_t)( len(in)*3+ 1 )  ,1))
 		defer C.free(unsafe.Pointer(c_out))
-		c0_outlen:=C.int(len(in)*3+1)
-		c_outlen:=&c0_outlen
-		c0_inlen:=C.int(len(in)*1+1)
-		c_inlen:=&c0_inlen
+	c0_outlen:=C.int(len(in)*3+1)
+	c_outlen:=&c0_outlen
+	c0_inlen:=C.int(len(in)*1+1)
+	c_inlen:=&c0_inlen
 	c_ret := C.UTF8ToHtml(c_out,c_outlen,c_in,c_inlen)
 
 	if c_ret != 0 {

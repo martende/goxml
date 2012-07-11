@@ -23,6 +23,7 @@ func gen_int_ptr(no int,nr int) *int{
 }
 
 func (s *HTTPparser_suite) SetUpSuite(c *C) {
+	fmt.Printf("")
 	//inttab := make([]int,1024)
 }
 func (s *HTTPparser_suite) TestUTF8ToHtml(c *C) {
@@ -43,7 +44,9 @@ func (s *HTTPparser_suite) TesthtmlAttrAllowed(c *C) {
 }
 
 func (s *S) TesthtmlAutoCloseTag(c *C) {
-	fmt.Printf("test_htmlAutoCloseTag\n")
+	r:=goxml.HtmlAutoCloseTag(nil,"TAG",nil)
+	c.Check(r, Equals, 1)
+	//fmt.Printf("R=%d",r)
 }
 
 func (s *S) test_htmlCreateMemoryParserCtxt(c *C) {

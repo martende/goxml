@@ -8,7 +8,9 @@ import optparse
 def calc_len(param,mul=1):
 	def w(n,t):
 		if t[-1]=='*':
-			s = "\tc0_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)\n\tc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t,'mul':mul}
+			s = "c0_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)\nc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t,'mul':mul}
+		else:
+			s = "c_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)" % {"n":n,"p":param,"t":t,'mul':mul}
 		return s
 	return w
 def create_buffer_as(param,mul=1):
@@ -39,11 +41,15 @@ def return_mapper(p1,p2):
 		
 FUNC_DESCS = (
 	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
-#	('f','UTF8ToHtml',None,'out'),('RETYPE','__string_ucharptr'),
+
 	('f','UTF8ToHtml',None,'inlen'),('CALC',calc_len('in')),
 	('f','UTF8ToHtml',None,'outlen'),('CALC',calc_len('in',3)),
 	('f','UTF8ToHtml',None,'out'),('CALC',create_buffer_as('in',3)),
 	('r','UTF8ToHtml',None,None),('CALC',return_mapper('out','ret')),
+	
+	('f','htmlCreateMemoryParserCtxt',None,'size'),('CALC',calc_len('buffer')),
+	
+	
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
 	('s','xmlDocPtr',None,'ids'),('PRIVATE'),
@@ -77,17 +83,17 @@ defer C.free(unsafe.Pointer(c_%(n)s))""" % {'n':n,'t':c2goc(t)}
 
 def getNullOrHandler(n,t): 
 	return """var c_%(n)s C.%(t)s=nil
-if %(n)s !=nil { c_%(n)s = %(n)s.handler }""" % {'n':n,'t':t}
+if %(n)s !=nil { c_%(n)s = (C.%(t)s)(%(n)s.handler) }""" % {'n':n,'t':t}
 
 #
 # returnConverter
 #
 def retNullOrObject(t,goRetType):
-	return 'if c_ret == nil {return nil}\n\treturn &%s{handler:c_ret}' % goRetType  
+	return 'if c_ret == nil {return nil}\nreturn &%s{handler:c_ret}' % goRetType  
 def retObject(t,goRetType):
 	return "return %s(c_ret)" % goRetType
 def retString(t,goRetType):
-	return "if c_ret == nil {return \"\"}\n\tg_ret:=C.GoString((*C.char)(unsafe.Pointer(c_ret)))\n\treturn g_ret" 
+	return "if c_ret == nil {return \"\"}\ng_ret:=C.GoString((*C.char)(unsafe.Pointer(c_ret)))\nreturn g_ret" 
 
 # Converters
 
@@ -179,6 +185,7 @@ TYPEINFO = {
 	},
 	'htmlDocPtr': ('alias','xmlDocPtr'),
 	'htmlNodePtr':  ('alias','xmlNodePtr'),
+	'htmlParserCtxtPtr':  ('alias','xmlParserCtxtPtr'),
 	'xmlDocPtr' : {
 		'goArgType' : '*XmlDoc',
 		'go2cConverter' : getNullOrHandler,
@@ -222,6 +229,7 @@ IMPORTS = (
 	'UTF8ToHtml',
 	'htmlAttrAllowed',
 	'htmlAutoCloseTag',
+	'htmlCreateMemoryParserCtxt',
 	)
 
 ALLI = (
