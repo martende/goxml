@@ -5,6 +5,7 @@ package goxml
 */
 import "C"
 import "unsafe"
+import "os"
 
 
 
@@ -403,6 +404,28 @@ func XmlDocGetRootElement(doc *XmlDoc) *XmlNode {
 
 	if c_ret == nil {return nil}
 	return &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+}
+/* 
+	   Function: xmlDocDump
+	   ReturnType: int
+	   Args: (('f', ['FILE', '*'], None), ('cur', ['xmlDocPtr'], None))
+*/
+func XmlDocDump(f *os.File,cur *XmlDoc) int {
+	var c_f *C.FILE
+	{
+		tp:= (*C.char)(unsafe.Pointer(C.CString("w")));
+		defer C.free(unsafe.Pointer(tp));
+		c_f = C.fdopen((C.int)(f.Fd()),tp)
+	}
+	
+	var c_cur C.xmlDocPtr=nil
+	if cur !=nil { c_cur = (C.xmlDocPtr)(cur.handler) }
+
+	c_ret := C.xmlDocDump(c_f,c_cur)
+
+
+
+	return int(c_ret)
 }
 /* 
 	   Function: xmlFreeDoc

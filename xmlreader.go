@@ -62,6 +62,23 @@ func XmlReaderForFile(filename string,encoding string,options int) (g_ret *XmlTe
 	return
 }
 /* 
+	   Function: xmlTextReaderPreservePattern
+	   ReturnType: int
+	   Args: (('reader', ['xmlTextReaderPtr'], None), ('pattern', ['xmlChar', '*'], None), ('namespaces', ['xmlChar', '**'], None))
+*/
+func XmlTextReaderPreservePattern(reader *XmlTextReader,pattern string) int {
+	var c_reader C.xmlTextReaderPtr=nil
+	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
+	c_pattern:= (*C.xmlChar)(unsafe.Pointer(C.CString(pattern)))
+	defer C.free(unsafe.Pointer(c_pattern))
+
+	c_ret := C.xmlTextReaderPreservePattern(c_reader,c_pattern,nil)
+
+
+
+	return int(c_ret)
+}
+/* 
 	   Function: xmlTextReaderNodeType
 	   ReturnType: int
 	   Args: (('reader', ['xmlTextReaderPtr'], None),)
@@ -71,6 +88,26 @@ func XmlTextReaderNodeType(reader *XmlTextReader) int {
 	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
 
 	c_ret := C.xmlTextReaderNodeType(c_reader)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: xmlReaderNewFile
+	   ReturnType: int
+	   Args: (('reader', ['xmlTextReaderPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlReaderNewFile(reader *XmlTextReader,filename string,encoding string,options int) int {
+	var c_reader C.xmlTextReaderPtr=nil
+	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.xmlReaderNewFile(c_reader,c_filename,c_encoding,c_options)
 
 
 
@@ -116,6 +153,37 @@ func XmlTextReaderIsEmptyElement(reader *XmlTextReader) int {
 	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
 
 	c_ret := C.xmlTextReaderIsEmptyElement(c_reader)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: xmlTextReaderCurrentDoc
+	   ReturnType: xmlDocPtr
+	   Args: (('reader', ['xmlTextReaderPtr'], None),)
+*/
+func XmlTextReaderCurrentDoc(reader *XmlTextReader) *XmlDoc {
+	var c_reader C.xmlTextReaderPtr=nil
+	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
+
+	c_ret := C.xmlTextReaderCurrentDoc(c_reader)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+}
+/* 
+	   Function: xmlTextReaderIsValid
+	   ReturnType: int
+	   Args: (('reader', ['xmlTextReaderPtr'], None),)
+*/
+func XmlTextReaderIsValid(reader *XmlTextReader) int {
+	var c_reader C.xmlTextReaderPtr=nil
+	if reader !=nil { c_reader = (C.xmlTextReaderPtr)(reader.handler) }
+
+	c_ret := C.xmlTextReaderIsValid(c_reader)
 
 
 

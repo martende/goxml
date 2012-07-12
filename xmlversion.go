@@ -12,5 +12,6 @@ const LIBXML_VERSION_STRING =C.LIBXML_VERSION_STRING
 const LIBXML_VERSION_EXTRA = C.LIBXML_VERSION_EXTRA
 
 func XmlCheckVersion() {
-	C.xmlCheckVersion(LIBXML_VERSION)
+        C.xmlCheckVersion(LIBXML_VERSION)
 }
+
