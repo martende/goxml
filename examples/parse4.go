@@ -27,8 +27,8 @@ func example4Func(filename string,desc *os.File) {
         return
     }
     
-    ctxt := XmlCreatePushParserCtxt(nil,string(chars), len(chars), filename)
-    if ctxt == nil {
+    ctxt,err := XmlCreatePushParserCtxt(nil,string(chars), filename)
+    if err != nil {
         fmt.Fprintf(os.Stderr, "Failed to create parser context !\n")
         return
     }

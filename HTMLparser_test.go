@@ -26,6 +26,7 @@ func (s *HTTPparser_suite) SetUpSuite(c *C) {
 	fmt.Printf("")
 	//inttab := make([]int,1024)
 }
+
 func (s *HTTPparser_suite) TestUTF8ToHtml(c *C) {
 	i1 := ""
 	r1,_:= goxml.UTF8ToHtml(i1)

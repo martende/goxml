@@ -5,6 +5,7 @@ package goxml
 */
 import "C"
 import "unsafe"
+import "fmt"
 
 
 
@@ -686,5 +687,157 @@ func (this *XmlSAXHandler) GetSerror() xmlStructuredErrorFunc {
 }
 */
 
+/* 
+	   Function: xmlParseChunk
+	   ReturnType: int
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
+*/
+func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
+	var c_ctxt C.xmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+	defer C.free(unsafe.Pointer(c_chunk))
+	c_size := C.int(size)
+	c_terminate := C.int(terminate)
+
+	c_ret := C.xmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
+
+
+
+	return int(c_ret)
+}
+/* 
+	   Function: xmlCleanupParser
+	   ReturnType: void
+	   Args: ((None, ['void'], None),)
+*/
+func XmlCleanupParser() {
+
+
+	C.xmlCleanupParser()
+
+
+
+
+}
+/* 
+	   Function: xmlCreatePushParserCtxt
+	   ReturnType: xmlParserCtxtPtr
+	   Args: (('sax', ['xmlSAXHandlerPtr'], None), ('user_data', ['void', '*'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('filename', ['char', '*'], None))
+*/
+func XmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string) (g_ret *XmlParserCtxt,err error) {
+	var c_sax C.xmlSAXHandlerPtr=nil
+	if sax !=nil { c_sax = (C.xmlSAXHandlerPtr)(sax.handler) }
+	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+	defer C.free(unsafe.Pointer(c_chunk))
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_size:=C.int(len(chunk)*1)
+	c_ret := C.xmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlCreatePushParserCtxt errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlCtxtReadFile
+	   ReturnType: xmlDocPtr
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options int) (g_ret *XmlDoc,err error) {
+	var c_ctxt C.xmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.xmlCtxtReadFile(c_ctxt,c_filename,c_encoding,c_options)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlCtxtReadFile errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlNewParserCtxt
+	   ReturnType: xmlParserCtxtPtr
+	   Args: ((None, ['void'], None),)
+*/
+func XmlNewParserCtxt() *XmlParserCtxt {
+
+
+	c_ret := C.xmlNewParserCtxt()
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+}
+/* 
+	   Function: xmlFreeParserCtxt
+	   ReturnType: void
+	   Args: (('ctxt', ['xmlParserCtxtPtr'], None),)
+*/
+func XmlFreeParserCtxt(ctxt *XmlParserCtxt) {
+	var c_ctxt C.xmlParserCtxtPtr=nil
+	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
+
+	C.xmlFreeParserCtxt(c_ctxt)
+
+
+
+
+}
+/* 
+	   Function: xmlReadMemory
+	   ReturnType: xmlDocPtr
+	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlReadMemory(buffer string,URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
+	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
+	defer C.free(unsafe.Pointer(c_buffer))
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+	c_size:=C.int(len(buffer)*1)
+	c_ret := C.xmlReadMemory(c_buffer,c_size,c_URL,c_encoding,c_options)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlReadMemory errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlReadFile
+	   ReturnType: xmlDocPtr
+	   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func XmlReadFile(URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.xmlReadFile(c_URL,c_encoding,c_options)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlReadFile errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
 
 

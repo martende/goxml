@@ -245,7 +245,7 @@ func HtmlTagLookup(tag string) *HtmlElemDesc {
 func HtmlCreateMemoryParserCtxt(buffer string) (g_ret *XmlParserCtxt,err error) {
 	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
 	defer C.free(unsafe.Pointer(c_buffer))
-	c_size:=C.int(len(buffer)*1+1)
+	c_size:=C.int(len(buffer)*1)
 	c_ret := C.htmlCreateMemoryParserCtxt(c_buffer,c_size)
 
 	if c_ret == nil {
@@ -300,7 +300,7 @@ func HtmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string,en
 	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
 	defer C.free(unsafe.Pointer(c_filename))
 	c_enc := C.xmlCharEncoding(enc)
-	c_size:=C.int(len(chunk)*1+1)
+	c_size:=C.int(len(chunk)*1)
 	c_ret := C.htmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename,c_enc)
 
 	if c_ret == nil {
@@ -512,9 +512,9 @@ func UTF8ToHtml(in string) (g_out string,err error) {
 	defer C.free(unsafe.Pointer(c_in))
 		c_out:= (*C.uchar)(C.calloc(  (C.size_t)( len(in)*3+ 1 )  ,1))
 		defer C.free(unsafe.Pointer(c_out))
-	c0_outlen:=C.int(len(in)*3+1)
+	c0_outlen:=C.int(len(in)*3)
 	c_outlen:=&c0_outlen
-	c0_inlen:=C.int(len(in)*1+1)
+	c0_inlen:=C.int(len(in)*1)
 	c_inlen:=&c0_inlen
 	c_ret := C.UTF8ToHtml(c_out,c_outlen,c_in,c_inlen)
 
@@ -575,7 +575,7 @@ func HtmlCtxtReadMemory(ctxt *XmlParserCtxt,buffer string,URL string,encoding st
 	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
 	defer C.free(unsafe.Pointer(c_encoding))
 	c_options := C.int(options)
-	c_size:=C.int(len(buffer)*1+1)
+	c_size:=C.int(len(buffer)*1)
 	c_ret := C.htmlCtxtReadMemory(c_ctxt,c_buffer,c_size,c_URL,c_encoding,c_options)
 
 	if c_ret == nil {
@@ -658,9 +658,9 @@ func HtmlEncodeEntities(in string,quoteChar int) (g_out string,err error) {
 	c_quoteChar := C.int(quoteChar)
 		c_out:= (*C.uchar)(C.calloc(  (C.size_t)( len(in)*3+ 1 )  ,1))
 		defer C.free(unsafe.Pointer(c_out))
-	c0_outlen:=C.int(len(in)*1+1)
+	c0_outlen:=C.int(len(in)*1)
 	c_outlen:=&c0_outlen
-	c0_inlen:=C.int(len(in)*1+1)
+	c0_inlen:=C.int(len(in)*1)
 	c_inlen:=&c0_inlen
 	c_ret := C.htmlEncodeEntities(c_out,c_outlen,c_in,c_inlen,c_quoteChar)
 

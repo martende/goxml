@@ -5,6 +5,7 @@ import (
 	"os"
 	"fmt"
 )
+
 /*
 
 Analog http://www.xmlsoft.org/examples/reader1.c
@@ -44,8 +45,8 @@ func processNode(reader *XmlTextReader) {
 
 
 func streamFile(filename string) {
-    reader:=XmlReaderForFile(filename,"",0)
-    if ( reader != nil) {
+    reader,err:=XmlReaderForFile(filename,"",0)
+    if ( err == nil) {
     	ret := XmlTextReaderRead(reader)
         for ;ret == 1;ret = XmlTextReaderRead(reader) {
             processNode(reader)
@@ -61,13 +62,10 @@ func streamFile(filename string) {
 
 func main() {
 	XmlCheckVersion()
-	
 	if len(os.Args) != 2 {
         return
     }
-    
     streamFile(os.Args[1])
-    
 	XmlCleanupParser()
 	XmlMemoryDump()
 }

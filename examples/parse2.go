@@ -20,9 +20,9 @@ func example2Func(filename string) {
 		fmt.Fprintf(os.Stderr,"Failed to allocate parser context\n");
         return;
 	}
-	doc := XmlCtxtReadFile(ctxt, filename, "", XML_PARSE_DTDVALID);
+	doc,err := XmlCtxtReadFile(ctxt, filename, "", XML_PARSE_DTDVALID);
 
-    if doc == nil {
+    if err != nil {
         fmt.Fprintf(os.Stderr, "Failed to parse %s\n", filename);
     } else {
     	/* check if validation suceeded */

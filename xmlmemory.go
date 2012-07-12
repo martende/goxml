@@ -8,5 +8,19 @@ import "C"
 
 
 
+/* 
+	   Function: xmlMemoryDump
+	   ReturnType: void
+	   Args: ((None, ['void'], None),)
+*/
+func XmlMemoryDump() {
+
+
+	C.xmlMemoryDump()
+
+
+
+
+}
 
 

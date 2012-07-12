@@ -6,9 +6,6 @@ package goxml
 */
 import "C"
 
-type XmlNode struct {
-	handler C.xmlNodePtr
-}
 
 
 type XmlTextReader struct {

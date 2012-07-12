@@ -8,6 +8,122 @@ import "unsafe"
 
 
 
+/*
+	Element ns has not registered type xmlNs* 
+	Element ns not recognized getter for elType:xmlNs* goType:xmlNs*
+	Element properties has not registered type struct _xmlAttr* 
+	Element properties not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
+	Element nsDef has not registered type xmlNs* 
+	Element nsDef not recognized getter for elType:xmlNs* goType:xmlNs*
+	Element line has not registered type unsigned short 
+	Element line not recognized getter for elType:unsigned short goType:unsigned short
+	Element extra has not registered type unsigned short 
+	Element extra not recognized getter for elType:unsigned short goType:unsigned short
+
+*/
+type XmlNode struct {
+	handler C.xmlNodePtr
+	// _private void* // Private
+	// type xmlElementType // Private
+	_children *XmlNode
+	_last *XmlNode
+	_parent *XmlNode
+	_next *XmlNode
+	_prev *XmlNode
+	_doc *XmlDoc
+	// psvi void* // Private
+}
+func (this *XmlNode) GetName() string {
+	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
+}
+func (this *XmlNode) GetChildren() *XmlNode {
+	if this.handler.children == nil {
+		return nil
+	}
+	if this._children == nil {
+		this._children = &XmlNode{}
+	}
+	this._children.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.children))
+	return this._children
+}
+func (this *XmlNode) GetLast() *XmlNode {
+	if this.handler.last == nil {
+		return nil
+	}
+	if this._last == nil {
+		this._last = &XmlNode{}
+	}
+	this._last.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.last))
+	return this._last
+}
+func (this *XmlNode) GetParent() *XmlNode {
+	if this.handler.parent == nil {
+		return nil
+	}
+	if this._parent == nil {
+		this._parent = &XmlNode{}
+	}
+	this._parent.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.parent))
+	return this._parent
+}
+func (this *XmlNode) GetNext() *XmlNode {
+	if this.handler.next == nil {
+		return nil
+	}
+	if this._next == nil {
+		this._next = &XmlNode{}
+	}
+	this._next.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.next))
+	return this._next
+}
+func (this *XmlNode) GetPrev() *XmlNode {
+	if this.handler.prev == nil {
+		return nil
+	}
+	if this._prev == nil {
+		this._prev = &XmlNode{}
+	}
+	this._prev.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.prev))
+	return this._prev
+}
+func (this *XmlNode) GetDoc() *XmlDoc {
+	if this.handler.doc == nil {
+		return nil
+	}
+	if this._doc == nil {
+		this._doc = &XmlDoc{}
+	}
+	this._doc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.doc))
+	return this._doc
+}
+/*
+func (this *XmlNode) GetNs() xmlNs* {
+	return int(this.handler.ns)
+}
+*/
+func (this *XmlNode) GetContent() string {
+	return C.GoString((*C.char)(unsafe.Pointer(this.handler.content)))
+}
+/*
+func (this *XmlNode) GetProperties() struct _xmlAttr* {
+	return int(this.handler.properties)
+}
+*/
+/*
+func (this *XmlNode) GetNsDef() xmlNs* {
+	return int(this.handler.nsDef)
+}
+*/
+/*
+func (this *XmlNode) GetLine() unsigned short {
+	return int(this.handler.line)
+}
+*/
+/*
+func (this *XmlNode) GetExtra() unsigned short {
+	return int(this.handler.extra)
+}
+*/
 type XmlNs struct {
 	handler C.xmlNsPtr
 	_next *XmlNs
@@ -272,5 +388,36 @@ func (this *XmlDtd) GetSystemID() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.SystemID)))
 }
 
+/* 
+	   Function: xmlDocGetRootElement
+	   ReturnType: xmlNodePtr
+	   Args: (('doc', ['xmlDocPtr'], None),)
+*/
+func XmlDocGetRootElement(doc *XmlDoc) *XmlNode {
+	var c_doc C.xmlDocPtr=nil
+	if doc !=nil { c_doc = (C.xmlDocPtr)(doc.handler) }
+
+	c_ret := C.xmlDocGetRootElement(c_doc)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+}
+/* 
+	   Function: xmlFreeDoc
+	   ReturnType: void
+	   Args: (('cur', ['xmlDocPtr'], None),)
+*/
+func XmlFreeDoc(cur *XmlDoc) {
+	var c_cur C.xmlDocPtr=nil
+	if cur !=nil { c_cur = (C.xmlDocPtr)(cur.handler) }
+
+	C.xmlFreeDoc(c_cur)
+
+
+
+
+}
 
 

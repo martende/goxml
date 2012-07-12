@@ -8,9 +8,9 @@ import optparse
 def calc_len(param,mul=1):
 	def w(n,t):
 		if t[-1]=='*':
-			s = "c0_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)\nc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t,'mul':mul}
+			s = "c0_%(n)s:=C.int(len(%(p)s)*%(mul)s)\nc_%(n)s:=&c0_%(n)s" % {"n":n,"p":param,"t":t,'mul':mul}
 		else:
-			s = "c_%(n)s:=C.int(len(%(p)s)*%(mul)s+1)" % {"n":n,"p":param,"t":t,'mul':mul}
+			s = "c_%(n)s:=C.int(len(%(p)s)*%(mul)s)" % {"n":n,"p":param,"t":t,'mul':mul}
 		return s
 	return w
 def create_buffer_as(param,mul=1):
@@ -44,7 +44,7 @@ def return_mapper(p1,p2,ec="%s != 0"):
 	return t()
 		
 FUNC_DESCS = (
-	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
+	
 	
 	('f','UTF8ToHtml',None,'inlen'),('CALC',calc_len('in')),
 	('f','UTF8ToHtml',None,'outlen'),('CALC',calc_len('in',3)),
@@ -73,7 +73,20 @@ FUNC_DESCS = (
 	('f','htmlCtxtReadMemory',None,'size'),('CALC',calc_len('buffer')),
 	('r','htmlCtxtReadMemory',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
-	('f','htmlParseChunk',None,'size'),('CALC',calc_len('chunk')),
+	('f','htmlSAXParseFile','void*','userData'),('SKIP',),
+	
+	('f','xmlReadMemory',None,'size'),('CALC',calc_len('buffer')),
+	('r','xmlReadMemory',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	
+	('f','xmlCreatePushParserCtxt','void*','user_data'),('SKIP',),
+	('f','xmlCreatePushParserCtxt',None,'size'),('CALC',calc_len('chunk')),
+	('r','xmlCreatePushParserCtxt',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	
+	('r','xmlReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlCtxtReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+
+	('r','xmlReaderForFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+
 	
 	#('f','','char*','filename'),
 	('s','xmlDocPtr',None,'_private'),('PRIVATE'),
@@ -145,7 +158,7 @@ TYPEALIAS = {
 	'htmlElemDesc*' : 'htmlElemDescPtr',
 	'htmlEntityDesc*' : 'htmlEntityDescPtr',
 }
-TYPEINFO = {
+TYPEINFO = {                                                
 	'xmlDtdPtr' : {
 		'goArgType' : '*XmlDtd',
 		'exportStruct' : '_xmlDtd',
@@ -165,6 +178,7 @@ TYPEINFO = {
 		'goArgType' : '*HtmlElemDesc',
 		'go2cConverter' : getNullOrHandler,
 		'exportStruct' : '_htmlElemDesc',
+		'returnConverter' : retNullOrObject,
 	},
 	'xmlElementType': {
 		'goArgType':'int',
@@ -207,13 +221,15 @@ TYPEINFO = {
 		'goArgType' : '*XmlTextReader',
 		'go2cConverter' : getNullOrHandler,
 		'returnConverter' : retNullOrObject,
-		'exportStruct' : '_xmlTextReader'
+		'exportStruct' : '_xmlTextReader',
+		'c2GoConverter'	: c2GoConverter1, 
 	},
 	
 	'xmlNodePtr' : {
 		'goArgType' : '*XmlNode',
 		'go2cConverter' : getNullOrHandler,
 		'returnConverter' : retNullOrObject,
+		'exportStruct' : '_xmlNode',
 	},
 	
 	'htmlDocPtr': ('alias','xmlDocPtr'),
@@ -274,7 +290,7 @@ INCLUDES = (
 	"/usr/include/libxml2/libxml/encoding.h",
 );
 
-IMPORTS = (
+HTMLparser_IMPORTS = (
 	'UTF8ToHtml',
 	'htmlAttrAllowed',
 	'htmlAutoCloseTag',
@@ -284,9 +300,9 @@ IMPORTS = (
 	'htmlReadFile',
 	'htmlCtxtReadFd',
 	'htmlCtxtReadFile',
-	'SKIP#htmlCtxtReadIO',
+	'#htmlCtxtReadIO',
 	'htmlCtxtReadMemory',
-	'SKIP#htmlReadIO',
+	'#htmlReadIO',
 	'htmlCtxtReset',
 	'htmlCtxtUseOptions',
 	'htmlElementAllowedHere',
@@ -305,22 +321,38 @@ IMPORTS = (
 	'htmlParseDoc',
 	'htmlParseDocument',
 	'htmlParseElement',
-	'htmlParseEntityRef',
+	'#htmlParseEntityRef',
 	'htmlParseFile',
 	'htmlReadDoc',
 	'htmlReadFd',
 	'htmlReadFile',
-	'SKIP#htmlReadIO',
-	'htmlReadMemory'
+	'#htmlReadIO',
+	'htmlReadMemory',
 	'htmlSAXParseDoc',
-	'htmlSAXParseFile'
-	'htmlTagLookup'
+	'htmlSAXParseFile',
+	'htmlTagLookup',
+	
 )
 
-ALLI = (
-	'xmlDocCopyNode',
-	'xmlMemBlocks',
-	'xmlStrlen',
+parser_IMPORTS = (
+	'xmlReadFile',
+	'xmlFreeDoc',
+	'xmlCleanupParser',
+	'xmlFreeParserCtxt',
+	'xmlNewParserCtxt',
+	'xmlCtxtReadFile',
+	'xmlReadMemory',
+	'xmlCreatePushParserCtxt',
+	'xmlParseChunk',
+)
+
+memory_IMPORTS = (
+	'xmlMemoryDump',
+)
+
+reader_IMPORTS = (
+	'xmlReaderForFile',
+	'xmlTextReaderRead',
 	'xmlFreeTextReader',
 	'xmlTextReaderConstName',
 	'xmlTextReaderConstValue',
@@ -329,6 +361,21 @@ ALLI = (
 	'xmlTextReaderRead',
 	'xmlTextReaderIsEmptyElement',
 	'xmlTextReaderHasValue',
+)
+
+tree_IMPORTS = (
+	'xmlDocGetRootElement',
+)
+IMPORTS = HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS
+
+
+
+ALLI = (
+	'xmlDocCopyNode',
+	'xmlMemBlocks',
+	'xmlStrlen',
+	'xmlFreeTextReader',
+	
 	'xmlReaderForFile','xmlParseChunk','xmlReadFile','xmlReadMemory','xmlFreeDoc','xmlAddChild','xmlCleanupParser','xmlMemoryDump','xmlNewParserCtxt','xmlFreeParserCtxt','xmlCtxtReadFile','xmlCreatePushParserCtxt');
 
 TMP = "/tmp/tmp1"
@@ -578,10 +625,17 @@ class FileConverter():
 		for i in l:
 			r.append("\n".join(["\t" + k for k in i.split("\n")]))
 		return "\n".join(r)
+	def log(self,s):
+		if VERBOSE:
+			print self.filename+": " +s
+	
 	def processFuncsList(self,functionSignatures):
 		flist = []
+		#print functionSignatures
 		for fName in functionSignatures:
 			inImports = fName in IMPORTS
+			if not inImports:
+				self.log("Skip %s"%fName)
 			if inImports or CONF_PRINT_SKIPPED: 
 				errs = []
 				sig = functionSignatures[fName]
@@ -619,6 +673,12 @@ class FileConverter():
 				if 'unsafe.Pointer' in funcCode:
 					self.unsafe = True
 				flist.append(funcCode)
+				
+				if errs:
+					self.log("Errored %s"%fName)
+				else:
+					self.log("Process %s"%fName)
+			
 		return flist
 	def preprocessArgsSig(self,sig):
 		c = 1
@@ -809,7 +869,7 @@ class FileConverter():
 		
 		
 		
-		#sys.exit(0)
+		
 
 parser = optparse.OptionParser()
 
@@ -825,6 +885,10 @@ parser.add_option('-p', '--print-all',
     action="store_true", dest="PRINTALL",
     help="Print parser content", default=None)
 
+parser.add_option('-v', '--verbose',
+    action="count", dest="VERBOSE",
+    help="Verbose", default=0)
+
 
 options, args = parser.parse_args()
 
@@ -832,6 +896,9 @@ if options.IMPORTS is not None:
 	IMPORTS = options.IMPORTS
 if options.INCLUDES is not None:
 	INCLUDES = options.INCLUDES
+if options.VERBOSE is not None:
+	VERBOSE = options.VERBOSE
+
 
 def convertAliases():
 	for t in TYPEINFO:
