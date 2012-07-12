@@ -222,6 +222,22 @@ func HtmlAttrAllowed(arg1 *HtmlElemDesc,arg2 string,arg3 int) int {
 	return int(c_ret)
 }
 /* 
+	   Function: htmlTagLookup
+	   ReturnType: htmlElemDesc*
+	   Args: (('tag', ['xmlChar', '*'], None),)
+*/
+func HtmlTagLookup(tag string) *HtmlElemDesc {
+	c_tag:= (*C.xmlChar)(unsafe.Pointer(C.CString(tag)))
+	defer C.free(unsafe.Pointer(c_tag))
+
+	c_ret := C.htmlTagLookup(c_tag)
+
+
+
+	if c_ret == nil {return nil}
+	return &HtmlElemDesc{handler:(C.htmlElemDescPtr)(c_ret)}
+}
+/* 
 	   Function: htmlCreateMemoryParserCtxt
 	   ReturnType: htmlParserCtxtPtr
 	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None))
@@ -293,6 +309,28 @@ func HtmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string,en
 		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: htmlReadMemory
+	   ReturnType: htmlDocPtr
+	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+*/
+func HtmlReadMemory(buffer string,size int,URL string,encoding string,options int) *XmlDoc {
+	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
+	defer C.free(unsafe.Pointer(c_buffer))
+	c_size := C.int(size)
+	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	defer C.free(unsafe.Pointer(c_URL))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_options := C.int(options)
+
+	c_ret := C.htmlReadMemory(c_buffer,c_size,c_URL,c_encoding,c_options)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 }
 /* 
 	   Function: htmlIsAutoClosed
@@ -383,13 +421,14 @@ func HtmlNodeStatus(arg1 *XmlNode,arg2 int) int {
 	   ReturnType: int
 	   Args: (('ctxt', ['htmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
 */
-func HtmlParseChunk(ctxt *XmlParserCtxt,chunk string,terminate int) int {
+func HtmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
 	var c_ctxt C.htmlParserCtxtPtr=nil
 	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
 	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
 	defer C.free(unsafe.Pointer(c_chunk))
+	c_size := C.int(size)
 	c_terminate := C.int(terminate)
-	c_size:=C.int(len(chunk)*1+1)
+
 	c_ret := C.htmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
 
 
@@ -397,29 +436,25 @@ func HtmlParseChunk(ctxt *XmlParserCtxt,chunk string,terminate int) int {
 	return int(c_ret)
 }
 /* 
-	   Function: htmlParseEntityRef
-	   ReturnType: htmlEntityDesc*
-	   Args: (('ctxt', ['htmlParserCtxtPtr'], None), ('str', ['xmlChar', '**'], None))
+	   Function: htmlSAXParseFile
+	   ReturnType: htmlDocPtr
+	   Args: (('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('sax', ['htmlSAXHandlerPtr'], None), ('userData', ['void', '*'], None))
 */
-/*
+func HtmlSAXParseFile(filename string,encoding string,sax *XmlSAXHandler) *XmlDoc {
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	var c_sax C.htmlSAXHandlerPtr=nil
+	if sax !=nil { c_sax = (C.htmlSAXHandlerPtr)(sax.handler) }
 
-	Warn: str xmlChar** Not defined
-	Warn: str xmlChar** No converter to C(go2cConverter)
-
-func HtmlParseEntityRef(ctxt *XmlParserCtxt,str xmlChar**) *HtmlEntityDesc {
-	var c_ctxt C.htmlParserCtxtPtr=nil
-	if ctxt !=nil { c_ctxt = (C.htmlParserCtxtPtr)(ctxt.handler) }
-	str
-
-	c_ret := C.htmlParseEntityRef(c_ctxt,c_str)
+	c_ret := C.htmlSAXParseFile(c_filename,c_encoding,c_sax,nil)
 
 
 
 	if c_ret == nil {return nil}
-	return &HtmlEntityDesc{handler:(C.htmlEntityDescPtr)(c_ret)}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 }
-
-*/
 /* 
 	   Function: htmlElementStatusHere
 	   ReturnType: htmlStatus
@@ -655,6 +690,34 @@ func HtmlNewParserCtxt() *XmlParserCtxt {
 	if c_ret == nil {return nil}
 	return &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
 }
+/* 
+	   Function: htmlSAXParseDoc
+	   ReturnType: htmlDocPtr
+	   Args: (('cur', ['xmlChar', '*'], None), ('encoding', ['char', '*'], None), ('sax', ['htmlSAXHandlerPtr'], None), ('userData', ['void', '*'], None))
+*/
+/*
+
+	Warn: userData void* Not defined
+	Warn: userData void* No converter to C(go2cConverter)
+
+func HtmlSAXParseDoc(cur string,encoding string,sax *XmlSAXHandler,userData void*) *XmlDoc {
+	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+	defer C.free(unsafe.Pointer(c_cur))
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	var c_sax C.htmlSAXHandlerPtr=nil
+	if sax !=nil { c_sax = (C.htmlSAXHandlerPtr)(sax.handler) }
+	userData
+
+	c_ret := C.htmlSAXParseDoc(c_cur,c_encoding,c_sax,c_userData)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+}
+
+*/
 /* 
 	   Function: htmlCtxtUseOptions
 	   ReturnType: int
