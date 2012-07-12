@@ -2,6 +2,10 @@ package goxml
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/tree.h>
+int XmlNode_fetch_type(xmlNodePtr h) {
+	return (int)h->type;
+}
+
 */
 import "C"
 import "unsafe"
@@ -25,7 +29,6 @@ import "os"
 type XmlNode struct {
 	handler C.xmlNodePtr
 	// _private void* // Private
-	// type xmlElementType // Private
 	_children *XmlNode
 	_last *XmlNode
 	_parent *XmlNode
@@ -33,6 +36,9 @@ type XmlNode struct {
 	_prev *XmlNode
 	_doc *XmlDoc
 	// psvi void* // Private
+}
+func (this *XmlNode) GetType() int {
+	return int(C.XmlNode_fetch_type(this.handler))
 }
 func (this *XmlNode) GetName() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))

@@ -329,7 +329,7 @@ class FileConverter():
 			elType = "".join(el[1])
 			
 			info= lookInDb('s',innerStruct,elType,elName)
-			
+			self.log("Struct[" + cStruct + "] Field[n=%s,Ct=%s,db=%r]" % (elName,elType,info ))
 			if info:
 				if 'PRIVATE' in info:
 					fields.append(('// ' + elName , elType + " // Private" ) )
@@ -337,6 +337,9 @@ class FileConverter():
 				elif info[0] == 'RETYPE':
 					elType = info[1] 
 					retyped = True
+				elif info[0] == 'PASS':
+					# JUST NOP to skip wildmarks
+					pass
 			if not retyped and elType not in TYPEINFO:
 				if elType in TYPEALIAS:
 					elType =  TYPEALIAS[elType]
@@ -355,6 +358,9 @@ class FileConverter():
 			if goType == 'int':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn int(this.handler."+elName+")\n}\n"
+			elif goType == '__XmlNode_reserved_type':
+				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':'int','fieldName':fieldName,'goStructName':goStructName}
+				inner += "\treturn int(C.XmlNode_fetch_type(this.handler))\n}\n"
 			elif goType == 'byte':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
 				inner += "\treturn byte(this.handler."+elName+")\n}\n"
@@ -408,6 +414,7 @@ class FileConverter():
 		for s in structs:
 			for t in TYPEINFO:
 				if  TYPEINFO[t].get('exportStruct','')==s and structs[s]['members']:
+					self.log("Parse Struct %s"%t)
 					ss.append(self.prepareStruct(structs[s]['members'],s,t))
 					break
 		return ss
@@ -460,14 +467,17 @@ class FileConverter():
 			'consts_list' : '',
 			'structs_list' : '',
 			'funcs_list' : '',
+			'cpostprocessors':''
 		}
-		
+		if self.filename in CPOSTPROCESSORS:
+			varsdict['cpostprocessors'] = CPOSTPROCESSORS[self.filename] 
 		#varsdict['consts_list'] = "".join(self.processConstsList(p.defs['enums']))
 		
 		self.consts = self.processConstsList(p.defs['enums'])
-		
-		varsdict['funcs_list'] = "".join(self.processFuncsList(p.defs['functions']))
-		varsdict['structs_list'] = "".join(self.processStructs(p.defs['structs']))
+		if PROCESS_FUNCTIONS:
+			varsdict['funcs_list'] = "".join(self.processFuncsList(p.defs['functions']))
+		if PROCESS_STRUCTS:
+			varsdict['structs_list'] = "".join(self.processStructs(p.defs['structs']))
 		imports = []
 		
 		if "errors.New" in varsdict['funcs_list'] or "errors.New" in varsdict['structs_list']  :
@@ -487,8 +497,17 @@ class FileConverter():
 		
 		
 		
-
+PROCESS_STRUCTS = False
+PROCESS_FUNCTIONS = False
 parser = optparse.OptionParser()
+
+parser.add_option('--pf',
+    action="store_true", dest="PROCESS_FUNCTIONS",
+    help="Process Functions (default ALL)", default=None)
+
+parser.add_option('--ps',
+    action="store_true", dest="PROCESS_STRUCTS",
+    help="Process Structures (default ALL)", default=None)
 
 parser.add_option('-f', '--functions',
     action="append", dest="IMPORTS",
@@ -517,8 +536,15 @@ if options.INCLUDES is not None:
 	INCLUDES = options.INCLUDES
 if options.VERBOSE is not None:
 	VERBOSE = options.VERBOSE
+if options.PROCESS_STRUCTS is not None:
+	PROCESS_STRUCTS = options.PROCESS_STRUCTS
+if options.PROCESS_FUNCTIONS is not None:
+	PROCESS_FUNCTIONS = options.PROCESS_FUNCTIONS
 
-
+if not PROCESS_FUNCTIONS and not PROCESS_STRUCTS:
+	# Process All
+	PROCESS_STRUCTS = True
+	PROCESS_FUNCTIONS = True
 
 def convertAliases():
 	for t in TYPEINFO:
@@ -539,7 +565,7 @@ consts = []
 includes = []
 for include in INCLUDES:
 	if VERBOSE:
-		print "Parse: " + include + "\n"
+		print "Parse: " + include 
 	p = FileConverter(include)
 	p.processFile()
 	includes.append(p.filename)
