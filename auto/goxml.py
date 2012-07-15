@@ -95,6 +95,15 @@ FUNC_DESCS = (
 	
 	('f','xmlTextReaderPreservePattern',None,'namespaces'),('SKIP',),
 	
+	('r','xmlNewProp',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlNewChild',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlNewDoc',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlNewNode',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlDocSetRootElement',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlAddChild',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlNewText',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlCreateIntSubset',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	
 	('s','xmlNodePtr',None,'type'),('RETYPE','__XmlNode_reserved_type'),
 	('s','htmlElemDescPtr','char',None),('RETYPE','__bool'),
 	
@@ -173,6 +182,9 @@ TYPEINFO = {
 	'xmlDtdPtr' : {
 		'goArgType' : '*XmlDtd',
 		'exportStruct' : '_xmlDtd',
+		'c2GoConverter'	: c2GoConverter1, 
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
 	},
 	'xmlDictPtr' : {
 		'goArgType' : '*XmlDict',
@@ -183,8 +195,15 @@ TYPEINFO = {
 	'xmlNsPtr' : {
 		'goArgType' : '*XmlNs',
 		'exportStruct' : '_xmlNs',
+		'go2cConverter' : getNullOrHandler,
 	},
-	
+	'xmlAttrPtr' : {
+		'goArgType' : '*XmlAttr',
+		'exportStruct' : '_xmlAttr',
+		'c2GoConverter'	: c2GoConverter1, 
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
+	},
 	'htmlElemDescPtr' : {
 		'goArgType' : '*HtmlElemDesc',
 		'go2cConverter' : getNullOrHandler,
@@ -238,6 +257,7 @@ TYPEINFO = {
 		'go2cConverter' : getNullOrHandler,
 		'returnConverter' : retNullOrObject,
 		'exportStruct' : '_xmlNode',
+		'c2GoConverter'	: c2GoConverter1, 
 	},
 	
 	'htmlDocPtr': ('alias','xmlDocPtr'),
@@ -394,7 +414,16 @@ reader_IMPORTS = (
 
 tree_IMPORTS = (
 	'xmlDocGetRootElement',
-	'xmlDocDump'
+	'xmlDocDump',
+	'xmlNewChild',
+	'xmlNewProp',
+	'xmlSaveFormatFileEnc',
+	'xmlNewDoc',
+	'xmlNewNode',
+	'xmlDocSetRootElement',
+	'xmlAddChild',
+	'xmlNewText',
+	'xmlCreateIntSubset'
 )
 
 IMPORTS = HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS 

@@ -165,27 +165,30 @@ class FileConverter():
 		elif cReturnType != 'void' :
 			if cReturnType in TYPEALIAS:
 				cReturnType = TYPEALIAS[cReturnType]
-			if  'realType' in TYPEINFO[cReturnType]:
-				cReturnType = TYPEINFO[cReturnType]['realType']
-			returnConverter = None
-			try:
-				returnConverter = TYPEINFO[cReturnType]['returnConverter']
-			except:
-				returnConverter = lambda t,p:t
-				errs.append('Warn[createCallLine]: type (%s) has no Return converter to Go' % (cReturnType))
-			 
-			goReturnType = None
-			try:
-				goReturnType = TYPEINFO[cReturnType]['goReturnType']
-			except:
+			if cReturnType in TYPEINFO:
+				if  'realType' in TYPEINFO[cReturnType]:
+					cReturnType = TYPEINFO[cReturnType]['realType']
+				returnConverter = None
 				try:
-					goReturnType = re.sub(r'^\*','',TYPEINFO[cReturnType]['goArgType'])
+					returnConverter = TYPEINFO[cReturnType]['returnConverter']
 				except:
-					#goArgType = ptype
-					goReturnType = cReturnType
-					errs.append('Warn[createCallLine]: ReturnType %s found but not defined' % (goReturnType))
-			
-			returnBlock.append(returnConverter(cReturnType,goReturnType)) 
+					returnConverter = lambda t,p:t
+					errs.append('Warn[createCallLine]: type (%s) has no Return converter to Go' % (cReturnType))
+				 
+				goReturnType = None
+				try:
+					goReturnType = TYPEINFO[cReturnType]['goReturnType']
+				except:
+					try:
+						goReturnType = re.sub(r'^\*','',TYPEINFO[cReturnType]['goArgType'])
+					except:
+						#goArgType = ptype
+						goReturnType = cReturnType
+						errs.append('Warn[createCallLine]: ReturnType %s found but not defined' % (goReturnType))
+				
+				returnBlock.append(returnConverter(cReturnType,goReturnType))
+			else:
+				errs.append('Warn[createCallLine]: type (%s) has no Return converter(no info in TYPEINFO) to Go' % (cReturnType))
 		# Post Process Parameters
 		postProcessBlock = []
 		for (pname,ptype,_) in sig[1]:
@@ -224,8 +227,10 @@ class FileConverter():
 				# avoid aliases problems
 				if 'realType' in cInfo:
 					cType = cInfo['realType']
-				
-				postProcessBlock.append(cInfo['c2GoConverter']('g_ret',cInfo['goArgType'],'c_ret',cType))
+				if 'c2GoConverter' in cInfo:
+					postProcessBlock.append(cInfo['c2GoConverter']('g_ret',cInfo['goArgType'],'c_ret',cType))
+				else:
+					raise Exception("need c2GoConverter for type %s" % (cType))
 			
 		returnStr = self.funcJoin(returnBlock)
 		postProcessStr = self.funcJoin(postProcessBlock)

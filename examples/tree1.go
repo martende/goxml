@@ -8,11 +8,11 @@ import (
 
 /*
 
-Analog http://www.xmlsoft.org/examples/reader4.c
+Analog http://www.xmlsoft.org/examples/tree1.c
 
 Usage:
 
-./reader4 test2.xml test3.xml
+./tree1 test2.xml
 
 */
 

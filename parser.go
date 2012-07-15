@@ -37,8 +37,6 @@ import "fmt"
 	Element attsDefault not recognized getter for elType:xmlHashTablePtr goType:xmlHashTablePtr
 	Element attsSpecial has not registered type xmlHashTablePtr 
 	Element attsSpecial not recognized getter for elType:xmlHashTablePtr goType:xmlHashTablePtr
-	Element freeAttrs has not registered type xmlAttrPtr 
-	Element freeAttrs not recognized getter for elType:xmlAttrPtr goType:xmlAttrPtr
 	Element lastError has not registered type xmlError 
 	Element lastError not recognized getter for elType:xmlError goType:xmlError
 	Element parseMode has not registered type xmlParserMode 
@@ -68,6 +66,7 @@ type XmlParserCtxt struct {
 	_dict *XmlDict
 	// attallocs int* // Private
 	_freeElems *XmlNode
+	_freeAttrs *XmlAttr
 }
 func (this *XmlParserCtxt) GetSax() *XmlSAXHandler {
 	if this.handler.sax == nil {
@@ -360,11 +359,16 @@ func (this *XmlParserCtxt) GetFreeElems() *XmlNode {
 func (this *XmlParserCtxt) GetFreeAttrsNr() int {
 	return int(this.handler.freeAttrsNr)
 }
-/*
-func (this *XmlParserCtxt) GetFreeAttrs() xmlAttrPtr {
-	return int(this.handler.freeAttrs)
+func (this *XmlParserCtxt) GetFreeAttrs() *XmlAttr {
+	if this.handler.freeAttrs == nil {
+		return nil
+	}
+	if this._freeAttrs == nil {
+		this._freeAttrs = &XmlAttr{}
+	}
+	this._freeAttrs.handler = (C.xmlAttrPtr)(unsafe.Pointer(this.handler.freeAttrs))
+	return this._freeAttrs
 }
-*/
 /*
 func (this *XmlParserCtxt) GetLastError() xmlError {
 	return int(this.handler.lastError)

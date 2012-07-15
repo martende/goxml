@@ -17,7 +17,7 @@ Usage:
 func example1Func(filename string) {
 	doc,err:=XmlReadFile(filename, "", 0)
 	if err != nil {
-        fmt.Fprint(os.Stderr,"Failed to parse %s\n", filename);
+        fmt.Fprint(os.Stderr,"Failed to parse %s\n", filename)
     }
     XmlFreeDoc(doc);
 }

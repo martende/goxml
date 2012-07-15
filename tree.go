@@ -9,6 +9,7 @@ int XmlNode_fetch_type(xmlNodePtr h) {
 */
 import "C"
 import "unsafe"
+import "fmt"
 import "os"
 
 
@@ -129,6 +130,90 @@ func (this *XmlNode) GetLine() unsigned short {
 /*
 func (this *XmlNode) GetExtra() unsigned short {
 	return int(this.handler.extra)
+}
+*/
+/*
+	Element next has not registered type struct _xmlAttr* 
+	Element next not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
+	Element prev has not registered type struct _xmlAttr* 
+	Element prev not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
+	Element ns has not registered type xmlNs* 
+	Element ns not recognized getter for elType:xmlNs* goType:xmlNs*
+	Element atype has not registered type xmlAttributeType 
+	Element atype not recognized getter for elType:xmlAttributeType goType:xmlAttributeType
+
+*/
+type XmlAttr struct {
+	handler C.xmlAttrPtr
+	// _private void* // Private
+	// type xmlElementType // Private
+	_children *XmlNode
+	_last *XmlNode
+	_parent *XmlNode
+	_doc *XmlDoc
+	// psvi void* // Private
+}
+func (this *XmlAttr) GetName() string {
+	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
+}
+func (this *XmlAttr) GetChildren() *XmlNode {
+	if this.handler.children == nil {
+		return nil
+	}
+	if this._children == nil {
+		this._children = &XmlNode{}
+	}
+	this._children.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.children))
+	return this._children
+}
+func (this *XmlAttr) GetLast() *XmlNode {
+	if this.handler.last == nil {
+		return nil
+	}
+	if this._last == nil {
+		this._last = &XmlNode{}
+	}
+	this._last.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.last))
+	return this._last
+}
+func (this *XmlAttr) GetParent() *XmlNode {
+	if this.handler.parent == nil {
+		return nil
+	}
+	if this._parent == nil {
+		this._parent = &XmlNode{}
+	}
+	this._parent.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.parent))
+	return this._parent
+}
+/*
+func (this *XmlAttr) GetNext() struct _xmlAttr* {
+	return int(this.handler.next)
+}
+*/
+/*
+func (this *XmlAttr) GetPrev() struct _xmlAttr* {
+	return int(this.handler.prev)
+}
+*/
+func (this *XmlAttr) GetDoc() *XmlDoc {
+	if this.handler.doc == nil {
+		return nil
+	}
+	if this._doc == nil {
+		this._doc = &XmlDoc{}
+	}
+	this._doc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.doc))
+	return this._doc
+}
+/*
+func (this *XmlAttr) GetNs() xmlNs* {
+	return int(this.handler.ns)
+}
+*/
+/*
+func (this *XmlAttr) GetAtype() xmlAttributeType {
+	return int(this.handler.atype)
 }
 */
 type XmlNs struct {
@@ -396,6 +481,26 @@ func (this *XmlDtd) GetSystemID() string {
 }
 
 /* 
+	   Function: xmlSaveFormatFileEnc
+	   ReturnType: int
+	   Args: (('filename', ['char', '*'], None), ('cur', ['xmlDocPtr'], None), ('encoding', ['char', '*'], None), ('format', ['int'], None))
+*/
+func XmlSaveFormatFileEnc(filename string,cur *XmlDoc,encoding string,format int) int {
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+	var c_cur C.xmlDocPtr=nil
+	if cur !=nil { c_cur = (C.xmlDocPtr)(cur.handler) }
+	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	defer C.free(unsafe.Pointer(c_encoding))
+	c_format := C.int(format)
+
+	c_ret := C.xmlSaveFormatFileEnc(c_filename,c_cur,c_encoding,c_format)
+
+
+
+	return int(c_ret)
+}
+/* 
 	   Function: xmlDocGetRootElement
 	   ReturnType: xmlNodePtr
 	   Args: (('doc', ['xmlDocPtr'], None),)
@@ -410,6 +515,46 @@ func XmlDocGetRootElement(doc *XmlDoc) *XmlNode {
 
 	if c_ret == nil {return nil}
 	return &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+}
+/* 
+	   Function: xmlNewNode
+	   ReturnType: xmlNodePtr
+	   Args: (('ns', ['xmlNsPtr'], None), ('name', ['xmlChar', '*'], None))
+*/
+func XmlNewNode(ns *XmlNs,name string) (g_ret *XmlNode,err error) {
+	var c_ns C.xmlNsPtr=nil
+	if ns !=nil { c_ns = (C.xmlNsPtr)(ns.handler) }
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_ret := C.xmlNewNode(c_ns,c_name)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlNewNode errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlAddChild
+	   ReturnType: xmlNodePtr
+	   Args: (('parent', ['xmlNodePtr'], None), ('cur', ['xmlNodePtr'], None))
+*/
+func XmlAddChild(parent *XmlNode,cur *XmlNode) (g_ret *XmlNode,err error) {
+	var c_parent C.xmlNodePtr=nil
+	if parent !=nil { c_parent = (C.xmlNodePtr)(parent.handler) }
+	var c_cur C.xmlNodePtr=nil
+	if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+
+	c_ret := C.xmlAddChild(c_parent,c_cur)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlAddChild errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+	}
+	return
 }
 /* 
 	   Function: xmlDocDump
@@ -432,6 +577,132 @@ func XmlDocDump(f *os.File,cur *XmlDoc) int {
 
 
 	return int(c_ret)
+}
+/* 
+	   Function: xmlNewProp
+	   ReturnType: xmlAttrPtr
+	   Args: (('node', ['xmlNodePtr'], None), ('name', ['xmlChar', '*'], None), ('value', ['xmlChar', '*'], None))
+*/
+func XmlNewProp(node *XmlNode,name string,value string) (g_ret *XmlAttr,err error) {
+	var c_node C.xmlNodePtr=nil
+	if node !=nil { c_node = (C.xmlNodePtr)(node.handler) }
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+	c_value:= (*C.xmlChar)(unsafe.Pointer(C.CString(value)))
+	defer C.free(unsafe.Pointer(c_value))
+
+	c_ret := C.xmlNewProp(c_node,c_name,c_value)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlNewProp errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlAttr{handler:(C.xmlAttrPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlDocSetRootElement
+	   ReturnType: xmlNodePtr
+	   Args: (('doc', ['xmlDocPtr'], None), ('root', ['xmlNodePtr'], None))
+*/
+func XmlDocSetRootElement(doc *XmlDoc,root *XmlNode) (g_ret *XmlNode,err error) {
+	var c_doc C.xmlDocPtr=nil
+	if doc !=nil { c_doc = (C.xmlDocPtr)(doc.handler) }
+	var c_root C.xmlNodePtr=nil
+	if root !=nil { c_root = (C.xmlNodePtr)(root.handler) }
+
+	c_ret := C.xmlDocSetRootElement(c_doc,c_root)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlDocSetRootElement errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlNewChild
+	   ReturnType: xmlNodePtr
+	   Args: (('parent', ['xmlNodePtr'], None), ('ns', ['xmlNsPtr'], None), ('name', ['xmlChar', '*'], None), ('content', ['xmlChar', '*'], None))
+*/
+func XmlNewChild(parent *XmlNode,ns *XmlNs,name string,content string) (g_ret *XmlNode,err error) {
+	var c_parent C.xmlNodePtr=nil
+	if parent !=nil { c_parent = (C.xmlNodePtr)(parent.handler) }
+	var c_ns C.xmlNsPtr=nil
+	if ns !=nil { c_ns = (C.xmlNsPtr)(ns.handler) }
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+	c_content:= (*C.xmlChar)(unsafe.Pointer(C.CString(content)))
+	defer C.free(unsafe.Pointer(c_content))
+
+	c_ret := C.xmlNewChild(c_parent,c_ns,c_name,c_content)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlNewChild errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlCreateIntSubset
+	   ReturnType: xmlDtdPtr
+	   Args: (('doc', ['xmlDocPtr'], None), ('name', ['xmlChar', '*'], None), ('ExternalID', ['xmlChar', '*'], None), ('SystemID', ['xmlChar', '*'], None))
+*/
+func XmlCreateIntSubset(doc *XmlDoc,name string,ExternalID string,SystemID string) (g_ret *XmlDtd,err error) {
+	var c_doc C.xmlDocPtr=nil
+	if doc !=nil { c_doc = (C.xmlDocPtr)(doc.handler) }
+	c_name:= (*C.xmlChar)(unsafe.Pointer(C.CString(name)))
+	defer C.free(unsafe.Pointer(c_name))
+	c_ExternalID:= (*C.xmlChar)(unsafe.Pointer(C.CString(ExternalID)))
+	defer C.free(unsafe.Pointer(c_ExternalID))
+	c_SystemID:= (*C.xmlChar)(unsafe.Pointer(C.CString(SystemID)))
+	defer C.free(unsafe.Pointer(c_SystemID))
+
+	c_ret := C.xmlCreateIntSubset(c_doc,c_name,c_ExternalID,c_SystemID)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlCreateIntSubset errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDtd{handler:(C.xmlDtdPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlNewDoc
+	   ReturnType: xmlDocPtr
+	   Args: (('version', ['xmlChar', '*'], None),)
+*/
+func XmlNewDoc(version string) (g_ret *XmlDoc,err error) {
+	c_version:= (*C.xmlChar)(unsafe.Pointer(C.CString(version)))
+	defer C.free(unsafe.Pointer(c_version))
+
+	c_ret := C.xmlNewDoc(c_version)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlNewDoc errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
+	   Function: xmlNewText
+	   ReturnType: xmlNodePtr
+	   Args: (('content', ['xmlChar', '*'], None),)
+*/
+func XmlNewText(content string) (g_ret *XmlNode,err error) {
+	c_content:= (*C.xmlChar)(unsafe.Pointer(C.CString(content)))
+	defer C.free(unsafe.Pointer(c_content))
+
+	c_ret := C.xmlNewText(c_content)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlNewText errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+	}
+	return
 }
 /* 
 	   Function: xmlFreeDoc
