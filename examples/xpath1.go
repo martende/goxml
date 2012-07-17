@@ -52,6 +52,8 @@ func print_xpath_nodes(nodes []*XmlNode) {
     for i := 0; i < size; i++ {
     	if nodes[i].GetType() == XML_NAMESPACE_DECL {
     		//
+    		cur := nodes[i]
+    		fmt.Printf( "= nodens \"%s\"\n",cur.GetName() )
     	} else if (nodes[i].GetType() == XML_ELEMENT_NODE ) {
     		cur := nodes[i]
     		if (cur.GetNs() != nil ) {
