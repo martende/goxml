@@ -4,7 +4,8 @@ goxml
 TODO:
 
 Change Array Implementation
-
+{{{
+#!go
 func (this *XmlXPathObject) GetNodesetval() []XmlNode {
 	if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
 		return nil
@@ -21,3 +22,4 @@ func (this *XmlXPathObject) GetNodesetval() []XmlNode {
 	}
 	return ret
 }
+}}}
