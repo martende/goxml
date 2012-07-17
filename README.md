@@ -1,9 +1,9 @@
-# This is my README
-goxml
+# goxml - libxml2 go binding
 
 TODO:
 
 Change Array Implementation
+	:::go
 	func (this *XmlXPathObject) GetNodesetval() []XmlNode {
 		if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
 			return nil
