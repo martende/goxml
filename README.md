@@ -3,8 +3,8 @@
 TODO:
 
 Change Array Implementation
-	:::go
-	func (this *XmlXPathObject) GetNodesetval() []XmlNode {
+
+		func (this *XmlXPathObject) GetNodesetval() []XmlNode {
 		if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
 			return nil
 		}
@@ -16,4 +16,4 @@ Change Array Implementation
 			ret[i] = XmlNode{handler:k}
 		}
 		return ret
-	}
+		}
