@@ -175,6 +175,7 @@ TYPEALIAS = {
 	'struct _xmlDtd*' : 'xmlDtdPtr',
 	'struct _xmlDict*' : 'xmlDictPtr',
 	'struct _xmlNs*' : 'xmlNsPtr',
+	'xmlNs*' :'xmlNsPtr',
 	'struct _xmlSAXHandler*' : 'xmlSAXHandlerPtr',
 	'struct _xmlTextReader*' : 'xmlTextReaderPtr',
 	'htmlElemDesc*' : 'htmlElemDescPtr',

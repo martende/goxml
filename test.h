@@ -1,3 +1,16 @@
+struct _struc1 {
+	int a1,a2 ;
+} ;
+
+typedef struct _struc1 struc1;
+
+struct _struc2 {
+	int len;
+	struc1 **data;
+};
+typedef struct _struc2 struc2;
+
+struc2* createStructArray() ;
 
 struct _callbackInfo {
 	void *fakedCallback;

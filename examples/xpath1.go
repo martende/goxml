@@ -46,7 +46,24 @@ func execute_xpath_expression(filename string, xpathExpr string, nsList string) 
     return nil
 }
 
-func print_xpath_nodes(nodes []XmlNode) {
+func print_xpath_nodes(nodes []*XmlNode) {
+	size := len(nodes)
+	fmt.Printf("Result (%d nodes):\n", size);
+    for i := 0; i < size; i++ {
+    	if nodes[i].GetType() == XML_NAMESPACE_DECL {
+    		//
+    	} else if (nodes[i].GetType() == XML_ELEMENT_NODE ) {
+    		cur := nodes[i]
+    		if (cur.GetNs() != nil ) {
+    			fmt.Printf( "= node \"%s:%s\"\n", cur.GetNs().GetHref(),cur.GetName())
+    		} else {
+    			fmt.Printf( "= node \"%s\"\n", cur.GetName())
+    		}
+    	} else {
+    		cur := nodes[i]
+    		fmt.Printf( "= node \"%s\": type %d\n", cur.GetName(), cur.GetType())
+    	}
+    }
 
 }
 func usage(name string) {

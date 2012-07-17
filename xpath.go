@@ -23,24 +23,11 @@ type XmlXPathObject struct {
 	// user void* // Private
 	// user2 void* // Private
 }
-
-func (this *XmlXPathObject) GetNodesetval() []XmlNode {
-	if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
-		return nil
-	}
-	ret:=make([]XmlNode,this.handler.nodesetval.nodeNr)
-	
-	//k0:= this.handler.nodesetval.nodeTab
-	
-	nodeTab := *(*[]C.xmlNodePtr)(unsafe.Pointer(this.handler.nodesetval.nodeTab))
-
-	for i:=0;i<len(ret);i++ {
-		k:= nodeTab[i]
-		ret[i] = XmlNode{handler:k}
-	}
-	return ret
+/*
+func (this *XmlXPathObject) GetNodesetval() xmlNodeSetPtr {
+	return int(this.handler.nodesetval)
 }
-
+*/
 func (this *XmlXPathObject) GetBoolval() int {
 	return int(this.handler.boolval)
 }

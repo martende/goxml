@@ -347,6 +347,7 @@ class FileConverter():
 					pass
 			if not retyped and elType not in TYPEINFO:
 				if elType in TYPEALIAS:
+					self.log("Struct[" + cStruct + "] Field[n=%s,t=%s] use Alias %s" % (elName,elType,TYPEALIAS[elType] ))
 					elType =  TYPEALIAS[elType]
 			
 			if elType not in TYPEINFO:

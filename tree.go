@@ -15,12 +15,8 @@ import "os"
 
 
 /*
-	Element ns has not registered type xmlNs* 
-	Element ns not recognized getter for elType:xmlNs* goType:xmlNs*
 	Element properties has not registered type struct _xmlAttr* 
 	Element properties not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
-	Element nsDef has not registered type xmlNs* 
-	Element nsDef not recognized getter for elType:xmlNs* goType:xmlNs*
 	Element line has not registered type unsigned short 
 	Element line not recognized getter for elType:unsigned short goType:unsigned short
 	Element extra has not registered type unsigned short 
@@ -36,6 +32,8 @@ type XmlNode struct {
 	_next *XmlNode
 	_prev *XmlNode
 	_doc *XmlDoc
+	_ns *XmlNs
+	_nsDef *XmlNs
 	// psvi void* // Private
 }
 func (this *XmlNode) GetType() int {
@@ -104,11 +102,16 @@ func (this *XmlNode) GetDoc() *XmlDoc {
 	this._doc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.doc))
 	return this._doc
 }
-/*
-func (this *XmlNode) GetNs() xmlNs* {
-	return int(this.handler.ns)
+func (this *XmlNode) GetNs() *XmlNs {
+	if this.handler.ns == nil {
+		return nil
+	}
+	if this._ns == nil {
+		this._ns = &XmlNs{}
+	}
+	this._ns.handler = (C.xmlNsPtr)(unsafe.Pointer(this.handler.ns))
+	return this._ns
 }
-*/
 func (this *XmlNode) GetContent() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.content)))
 }
@@ -117,11 +120,16 @@ func (this *XmlNode) GetProperties() struct _xmlAttr* {
 	return int(this.handler.properties)
 }
 */
-/*
-func (this *XmlNode) GetNsDef() xmlNs* {
-	return int(this.handler.nsDef)
+func (this *XmlNode) GetNsDef() *XmlNs {
+	if this.handler.nsDef == nil {
+		return nil
+	}
+	if this._nsDef == nil {
+		this._nsDef = &XmlNs{}
+	}
+	this._nsDef.handler = (C.xmlNsPtr)(unsafe.Pointer(this.handler.nsDef))
+	return this._nsDef
 }
-*/
 /*
 func (this *XmlNode) GetLine() unsigned short {
 	return int(this.handler.line)
@@ -137,8 +145,6 @@ func (this *XmlNode) GetExtra() unsigned short {
 	Element next not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
 	Element prev has not registered type struct _xmlAttr* 
 	Element prev not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
-	Element ns has not registered type xmlNs* 
-	Element ns not recognized getter for elType:xmlNs* goType:xmlNs*
 	Element atype has not registered type xmlAttributeType 
 	Element atype not recognized getter for elType:xmlAttributeType goType:xmlAttributeType
 
@@ -151,6 +157,7 @@ type XmlAttr struct {
 	_last *XmlNode
 	_parent *XmlNode
 	_doc *XmlDoc
+	_ns *XmlNs
 	// psvi void* // Private
 }
 func (this *XmlAttr) GetName() string {
@@ -206,11 +213,16 @@ func (this *XmlAttr) GetDoc() *XmlDoc {
 	this._doc.handler = (C.xmlDocPtr)(unsafe.Pointer(this.handler.doc))
 	return this._doc
 }
-/*
-func (this *XmlAttr) GetNs() xmlNs* {
-	return int(this.handler.ns)
+func (this *XmlAttr) GetNs() *XmlNs {
+	if this.handler.ns == nil {
+		return nil
+	}
+	if this._ns == nil {
+		this._ns = &XmlNs{}
+	}
+	this._ns.handler = (C.xmlNsPtr)(unsafe.Pointer(this.handler.ns))
+	return this._ns
 }
-*/
 /*
 func (this *XmlAttr) GetAtype() xmlAttributeType {
 	return int(this.handler.atype)

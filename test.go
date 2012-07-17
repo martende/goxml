@@ -45,3 +45,20 @@ func Callbacker(t1 func(a1,a2 int) int,t2 func(a1,a2 int) int,a1 int) int{
 	//return t(a1,1)
 }
 
+func Struct_expr() {
+	k:=C.createStructArray()
+	off:=(uintptr)(unsafe.Pointer(k.data))
+	//off2:=unsafe.Pointer((uintptr)(off)+8)
+	t:=*(**C.struc1)(unsafe.Pointer(off))
+	fmt.Printf("off=%p %p\n",t,t.a1)
+	off+=unsafe.Sizeof(t)
+	t=*(**C.struc1)(unsafe.Pointer(off))
+	fmt.Printf("off=%p %p\n",t,t.a1)
+	//t2:=*(**C.struc1)(off2)
+	//fmt.Printf("%p\n",t2.a1)
+	
+	//fmt.Printf("%p\n",t[0])
+	/*m:=t[0]
+	fmt.Printf("%d\n",m.a1)
+	*/
+}
