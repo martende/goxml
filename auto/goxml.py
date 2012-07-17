@@ -10,6 +10,7 @@ INCLUDES = (
 	"/usr/include/libxml2/libxml/xmlstring.h",
 	"/usr/include/libxml2/libxml/HTMLparser.h",
 	"/usr/include/libxml2/libxml/encoding.h",
+	"/usr/include/libxml2/libxml/xpath.h",
 );
 
 
@@ -51,7 +52,7 @@ def return_mapper(p1,p2,ec="%s != 0"):
 	
 	return t()
 		
-FUNC_DESCS = (
+FUNC_DESCS = [
 	('f','UTF8ToHtml',None,'inlen'),('CALC',calc_len('in')),
 	('f','UTF8ToHtml',None,'outlen'),('CALC',calc_len('in',3)),
 	('f','UTF8ToHtml',None,'out'),('CALC',create_buffer_as('in',3)),
@@ -89,6 +90,7 @@ FUNC_DESCS = (
 	('r','xmlCreatePushParserCtxt',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	
 	('r','xmlReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
+	('r','xmlParseFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 	('r','xmlCtxtReadFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
 
 	('r','xmlReaderForFile',None,None),('CALC',return_mapper('ret','ret','%s == nil')),
@@ -121,7 +123,7 @@ FUNC_DESCS = (
 	('s',None,'void*',None),('PRIVATE'),
 	('s',None,'int*',None),('PRIVATE'),
 	
-)
+]
 getHandler =  lambda n,t:"c_%s := %s.handler" % (n,n)
 getConverter = lambda n,t:'c_%s := %s(%s)' % (n,c2goc(t),n)
 
@@ -200,6 +202,20 @@ TYPEINFO = {
 	'xmlAttrPtr' : {
 		'goArgType' : '*XmlAttr',
 		'exportStruct' : '_xmlAttr',
+		'c2GoConverter'	: c2GoConverter1, 
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
+	},
+	'xmlXPathContextPtr' : {
+		'goArgType' : '*XmlXPathContext',
+		'exportStruct' : '_xmlXPathContext',
+		'c2GoConverter'	: c2GoConverter1, 
+		'go2cConverter' : getNullOrHandler,
+		'returnConverter' : retNullOrObject,
+	},
+	'xmlXPathObjectPtr' : {
+		'goArgType' : '*XmlXPathObject',
+		'exportStruct' : '_xmlXPathObject',
 		'c2GoConverter'	: c2GoConverter1, 
 		'go2cConverter' : getNullOrHandler,
 		'returnConverter' : retNullOrObject,
@@ -380,6 +396,8 @@ HTMLparser_IMPORTS = (
 )
 
 parser_IMPORTS = (
+	'xmlParseFile',
+	'xmlInitParser',
 	'xmlReadFile',
 	'xmlFreeDoc',
 	'xmlCleanupParser',
@@ -426,7 +444,14 @@ tree_IMPORTS = (
 	'xmlCreateIntSubset'
 )
 
-IMPORTS = HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS 
+xpath_IMPORTS = (
+	'@xmlXPathNewContext',
+	'@xmlXPathEvalExpression',
+	'xmlXPathFreeContext',
+	'xmlXPathFreeObject'
+)
+
+IMPORTS = list(HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS + xpath_IMPORTS) 
 
 GO_TPL = """package goxml
 /*

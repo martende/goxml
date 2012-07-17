@@ -561,11 +561,23 @@ def convertAliases():
 				if 'exportStruct' in TYPEINFO[t]:
 					del TYPEINFO[t]['exportStruct']
 
-
+def processImports():
+	"""
+		Convert simple rules in IMPORTS to dbRules
+		@ - return error on null
+	"""
+	for i,func in enumerate(IMPORTS):
+		if func.startswith('@'):
+			IMPORTS[i] = IMPORTS[i][1:]
+			FUNC_DESCS.insert(0,('CALC',return_mapper('ret','ret','%s == nil')))
+			FUNC_DESCS.insert(0,('r',IMPORTS[i],None,None))
+			
+			
 if not os.path.exists(TMP):
 	os.mkdir(TMP) 
 
 convertAliases()
+processImports()
 consts = []
 includes = []
 for include in INCLUDES:

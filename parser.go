@@ -786,6 +786,24 @@ func XmlNewParserCtxt() *XmlParserCtxt {
 	return &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
 }
 /* 
+	   Function: xmlParseFile
+	   ReturnType: xmlDocPtr
+	   Args: (('filename', ['char', '*'], None),)
+*/
+func XmlParseFile(filename string) (g_ret *XmlDoc,err error) {
+	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	defer C.free(unsafe.Pointer(c_filename))
+
+	c_ret := C.xmlParseFile(c_filename)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlParseFile errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
 	   Function: xmlFreeParserCtxt
 	   ReturnType: void
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None),)
@@ -843,6 +861,20 @@ func XmlReadFile(URL string,encoding string,options int) (g_ret *XmlDoc,err erro
 		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: xmlInitParser
+	   ReturnType: void
+	   Args: ((None, ['void'], None),)
+*/
+func XmlInitParser() {
+
+
+	C.xmlInitParser()
+
+
+
+
 }
 
 
