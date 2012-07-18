@@ -693,6 +693,24 @@ func (this *XmlSAXHandler) GetSerror() xmlStructuredErrorFunc {
 */
 
 /* 
+	   Function: xmlParseDoc
+	   ReturnType: xmlDocPtr
+	   Args: (('cur', ['xmlChar', '*'], None),)
+*/
+func XmlParseDoc(cur string) (g_ret *XmlDoc,err error) {
+	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+	defer C.free(unsafe.Pointer(c_cur))
+
+	c_ret := C.xmlParseDoc(c_cur)
+
+	if c_ret == nil {
+		err = fmt.Errorf("xmlParseDoc errno %d" ,c_ret)
+	} else {
+		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+	}
+	return
+}
+/* 
 	   Function: xmlParseChunk
 	   ReturnType: int
 	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))

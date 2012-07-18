@@ -6,7 +6,7 @@ package goxml
 */
 import "C"
 import "unsafe"
-//import "fmt"
+import "fmt"
 //import "reflect"
 
 func (this *XmlXPathObject) GetNodesetval() []*XmlNode {
@@ -25,6 +25,45 @@ func (this *XmlXPathObject) GetNodesetval() []*XmlNode {
 	}
 	return ret
 }
+/**
+	GetChildren extension - return all ChildNodes as list
+*/
+func (this *XmlNode ) GetAllChildren() []*XmlNode {
+	l:=0
+	
+	for cur_node:= this.handler.children; cur_node!=nil; cur_node = cur_node.next {
+		fmt.Printf("GetAllChildren %v\n",cur_node);
+	
+		l++
+	}
+	ret:=make([]*XmlNode,l)
+	i:=0
+	for cur_node:= this.handler.children; cur_node!=nil; cur_node = cur_node.next {
+		ret[i] =  &XmlNode{handler:(C.xmlNodePtr)(unsafe.Pointer(this.handler))}
+		i++;
+	}
+	return ret
+}
+
+/**
+	GetProperties extension - return all attributes as list
+*/
+func (this *XmlNode ) GetAllProperties() []*XmlAttr {
+	fmt.Printf("GetAllProperties\n");
+	l:=0
+	for cur_node:= this.handler.properties; cur_node!=nil; cur_node = cur_node.next {
+		l++
+	}
+	fmt.Printf("GetAllProperties l=%d\n",l);
+	ret:=make([]*XmlAttr,l)
+	i:=0
+	for cur_node:= this.handler.children; cur_node!=nil; cur_node = cur_node.next {
+		ret[i] =  &XmlAttr{handler:(C.xmlAttrPtr)(unsafe.Pointer(this.handler))}
+		i++;
+	}
+	return ret
+}
+
 /**
 	static xmlNodePtr xmlXPathNodeSetDupNs(xmlNodePtr node, xmlNsPtr ns) hack
 	node - is ns 

@@ -176,6 +176,7 @@ TYPEALIAS = {
 	'struct _xmlDtd*' : 'xmlDtdPtr',
 	'struct _xmlDict*' : 'xmlDictPtr',
 	'struct _xmlNs*' : 'xmlNsPtr',
+	'struct _xmlAttr*' : 'xmlAttrPtr',
 	'xmlNs*' :'xmlNsPtr',
 	'struct _xmlSAXHandler*' : 'xmlSAXHandlerPtr',
 	'struct _xmlTextReader*' : 'xmlTextReaderPtr',
@@ -398,6 +399,7 @@ HTMLparser_IMPORTS = (
 )
 
 parser_IMPORTS = (
+	'@xmlParseDoc',
 	'xmlParseFile',
 	'xmlInitParser',
 	'xmlReadFile',
@@ -433,6 +435,7 @@ reader_IMPORTS = (
 )
 
 tree_IMPORTS = (
+	'xmlElemDump',
 	'xmlDocGetRootElement',
 	'xmlDocDump',
 	'xmlNewChild',

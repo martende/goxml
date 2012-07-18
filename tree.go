@@ -15,8 +15,6 @@ import "os"
 
 
 /*
-	Element properties has not registered type struct _xmlAttr* 
-	Element properties not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
 	Element line has not registered type unsigned short 
 	Element line not recognized getter for elType:unsigned short goType:unsigned short
 	Element extra has not registered type unsigned short 
@@ -33,6 +31,7 @@ type XmlNode struct {
 	_prev *XmlNode
 	_doc *XmlDoc
 	_ns *XmlNs
+	_properties *XmlAttr
 	_nsDef *XmlNs
 	// psvi void* // Private
 }
@@ -115,11 +114,16 @@ func (this *XmlNode) GetNs() *XmlNs {
 func (this *XmlNode) GetContent() string {
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.content)))
 }
-/*
-func (this *XmlNode) GetProperties() struct _xmlAttr* {
-	return int(this.handler.properties)
+func (this *XmlNode) GetProperties() *XmlAttr {
+	if this.handler.properties == nil {
+		return nil
+	}
+	if this._properties == nil {
+		this._properties = &XmlAttr{}
+	}
+	this._properties.handler = (C.xmlAttrPtr)(unsafe.Pointer(this.handler.properties))
+	return this._properties
 }
-*/
 func (this *XmlNode) GetNsDef() *XmlNs {
 	if this.handler.nsDef == nil {
 		return nil
@@ -141,10 +145,6 @@ func (this *XmlNode) GetExtra() unsigned short {
 }
 */
 /*
-	Element next has not registered type struct _xmlAttr* 
-	Element next not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
-	Element prev has not registered type struct _xmlAttr* 
-	Element prev not recognized getter for elType:struct _xmlAttr* goType:struct _xmlAttr*
 	Element atype has not registered type xmlAttributeType 
 	Element atype not recognized getter for elType:xmlAttributeType goType:xmlAttributeType
 
@@ -156,6 +156,8 @@ type XmlAttr struct {
 	_children *XmlNode
 	_last *XmlNode
 	_parent *XmlNode
+	_next *XmlAttr
+	_prev *XmlAttr
 	_doc *XmlDoc
 	_ns *XmlNs
 	// psvi void* // Private
@@ -193,16 +195,26 @@ func (this *XmlAttr) GetParent() *XmlNode {
 	this._parent.handler = (C.xmlNodePtr)(unsafe.Pointer(this.handler.parent))
 	return this._parent
 }
-/*
-func (this *XmlAttr) GetNext() struct _xmlAttr* {
-	return int(this.handler.next)
+func (this *XmlAttr) GetNext() *XmlAttr {
+	if this.handler.next == nil {
+		return nil
+	}
+	if this._next == nil {
+		this._next = &XmlAttr{}
+	}
+	this._next.handler = (C.xmlAttrPtr)(unsafe.Pointer(this.handler.next))
+	return this._next
 }
-*/
-/*
-func (this *XmlAttr) GetPrev() struct _xmlAttr* {
-	return int(this.handler.prev)
+func (this *XmlAttr) GetPrev() *XmlAttr {
+	if this.handler.prev == nil {
+		return nil
+	}
+	if this._prev == nil {
+		this._prev = &XmlAttr{}
+	}
+	this._prev.handler = (C.xmlAttrPtr)(unsafe.Pointer(this.handler.prev))
+	return this._prev
 }
-*/
 func (this *XmlAttr) GetDoc() *XmlDoc {
 	if this.handler.doc == nil {
 		return nil
@@ -527,6 +539,30 @@ func XmlDocGetRootElement(doc *XmlDoc) *XmlNode {
 
 	if c_ret == nil {return nil}
 	return &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
+}
+/* 
+	   Function: xmlElemDump
+	   ReturnType: void
+	   Args: (('f', ['FILE', '*'], None), ('doc', ['xmlDocPtr'], None), ('cur', ['xmlNodePtr'], None))
+*/
+func XmlElemDump(f *os.File,doc *XmlDoc,cur *XmlNode) {
+	var c_f *C.FILE
+	{
+		tp:= (*C.char)(unsafe.Pointer(C.CString("w")));
+		defer C.free(unsafe.Pointer(tp));
+		c_f = C.fdopen((C.int)(f.Fd()),tp)
+	}
+	
+	var c_doc C.xmlDocPtr=nil
+	if doc !=nil { c_doc = (C.xmlDocPtr)(doc.handler) }
+	var c_cur C.xmlNodePtr=nil
+	if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+
+	C.xmlElemDump(c_f,c_doc,c_cur)
+
+
+
+
 }
 /* 
 	   Function: xmlNewNode
