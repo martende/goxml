@@ -11,6 +11,7 @@ INCLUDES = (
 	"/usr/include/libxml2/libxml/HTMLparser.h",
 	"/usr/include/libxml2/libxml/encoding.h",
 	"/usr/include/libxml2/libxml/xpath.h",
+	"/usr/include/libxml2/libxml/xpathInternals.h"
 );
 
 
@@ -452,7 +453,11 @@ xpath_IMPORTS = (
 	'xmlXPathFreeObject'
 )
 
-IMPORTS = list(HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS + xpath_IMPORTS) 
+xpathinternals_IMPORTS = (
+	'xmlXPathRegisterNs',
+)
+
+IMPORTS = list(HTMLparser_IMPORTS + parser_IMPORTS + memory_IMPORTS + reader_IMPORTS + tree_IMPORTS + xpath_IMPORTS + xpathinternals_IMPORTS) 
 
 GO_TPL = """package goxml
 /*

@@ -4,6 +4,7 @@ import (
 	. "goxml"
 	"os"
 	"fmt"
+	"strings"
 )
 
 /*
@@ -33,6 +34,15 @@ func execute_xpath_expression(filename string, xpathExpr string, nsList string) 
     }
     defer XmlXPathFreeContext(xpathCtx)
     
+    if  len(nsList)>0 {
+    	err:=register_namespaces(xpathCtx,nsList)
+    	if (err!=nil) {
+    		fmt.Fprintf(os.Stderr,"Error: unable to register namespace\n")
+    		return fmt.Errorf("error")
+    	}
+    }
+    
+    
     xpathObj,err := XmlXPathEvalExpression(xpathExpr,xpathCtx)
     if err != nil {
         fmt.Fprintf(os.Stderr,"Error: unable to evaluate xpath expression  \"%s\"\n" , xpathExpr)
@@ -45,19 +55,33 @@ func execute_xpath_expression(filename string, xpathExpr string, nsList string) 
     
     return nil
 }
-
+func register_namespaces(xpathCtx *XmlXPathContext,nsList string) error {
+	items :=  strings.Split(nsList," ")
+	for i:=0;i<len(items);i++ {
+		p:=strings.SplitN(items[i],"=",2)
+		if len(p) == 2 {
+			fmt.Printf("RegisterNs %v\n",p)
+			if XmlXPathRegisterNs(xpathCtx,p[0],p[1]) !=0  {
+				fmt.Fprintf(os.Stderr,"Error: unable to register NS with prefix=\"%s\" and href=\"%s\"\n", p[0],p[1])
+				return fmt.Errorf("error %d",1)
+			}
+		}
+	}
+	return nil
+}
 func print_xpath_nodes(nodes []*XmlNode) {
 	size := len(nodes)
 	fmt.Printf("Result (%d nodes):\n", size);
     for i := 0; i < size; i++ {
     	if nodes[i].GetType() == XML_NAMESPACE_DECL {
     		//
-    		cur := nodes[i]
-    		fmt.Printf( "= nodens \"%s\"\n",cur.GetName() )
+    		ns := nodes[i].ConverttoNs()
+    		cur:= ns.GetNext().ConverttoNode()
+    		fmt.Printf( "= nodens \"%s:%s\"\n",cur.GetName(),ns.GetHref() )
     	} else if (nodes[i].GetType() == XML_ELEMENT_NODE ) {
     		cur := nodes[i]
     		if (cur.GetNs() != nil ) {
-    			fmt.Printf( "= node \"%s:%s\"\n", cur.GetNs().GetHref(),cur.GetName())
+    			fmt.Printf( "= nsnode \"%s:%s\"\n", cur.GetNs().GetHref(),cur.GetName())
     		} else {
     			fmt.Printf( "= node \"%s\"\n", cur.GetName())
     		}

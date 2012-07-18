@@ -4,16 +4,19 @@ TODO:
 
 Change Array Implementation
 
-		func (this *XmlXPathObject) GetNodesetval() []XmlNode {
-		if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
-			return nil
-		}
-		ret:=make([]XmlNode,this.handler.nodesetval.nodeNr)
-	
-		nodeTab := *(*[]C.xmlNodePtr)(unsafe.Pointer(this.handler.nodesetval.nodeTab))
-		for i:=0;i<len(ret);i++ {
-			k:= nodeTab[i]
-			ret[i] = XmlNode{handler:k}
-		}
-		return ret
+		func (this *XmlXPathObject) GetNodesetval() []*XmlNode {
+			if this.handler.nodesetval == nil || this.handler.nodesetval.nodeNr == 0 {
+				return nil
+			}
+			l:=int(this.handler.nodesetval.nodeNr)
+			ret:=make([]*XmlNode,l)
+			
+			off:=(uintptr)(unsafe.Pointer(this.handler.nodesetval.nodeTab))
+			
+			for i:=0;i<l;i++ {
+				t:=*(*C.xmlNodePtr)(unsafe.Pointer(off))
+				ret[i] = &XmlNode{handler:t}
+				off+=unsafe.Sizeof(t)
+			}
+			return ret
 		}

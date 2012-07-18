@@ -27,7 +27,14 @@ func (this *XmlXPathObject) GetNodesetval() []*XmlNode {
 }
 /**
 	static xmlNodePtr xmlXPathNodeSetDupNs(xmlNodePtr node, xmlNsPtr ns) hack
+	node - is ns 
+	next - is node
 **/
-func (this *XmlNode) GetNodesetval() *XmlNs {
-	return nil
+func (this *XmlNode) ConverttoNs() *XmlNs {
+	return &XmlNs{handler:(C.xmlNsPtr)(unsafe.Pointer(this.handler))}
 }
+
+func (this *XmlNs) ConverttoNode() *XmlNode {
+	return &XmlNode{handler:(C.xmlNodePtr)(unsafe.Pointer(this.handler))}
+}
+

@@ -9,6 +9,7 @@ package goxml
 #include <libxml/HTMLparser.h>
 #include <libxml/encoding.h>
 #include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 */
 import "C"
 
