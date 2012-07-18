@@ -17,12 +17,15 @@ Usage:
 */
 
 func print_element_names(a_node *XmlNode) {
-
+	if a_node != nil { 
+		fmt.Printf("root node: %s\n", a_node.GetName())
+	}
+	
     for cur_node:=a_node;cur_node!=nil;cur_node = cur_node.GetNext() {
     	if (cur_node.GetType() ==XML_ELEMENT_NODE) {
     		fmt.Printf("node type: Element, name: %s\n", cur_node.GetName())
     	}
-    	print_element_names(cur_node.GetChildren())
+    	//print_element_names(cur_node.GetChildren())
     }
     
     
@@ -46,6 +49,6 @@ func main() {
     defer XmlFreeDoc(doc)
     
     root_element:=XmlDocGetRootElement(doc)
-    print_element_names(root_element)
+    print_element_names(root_element.GetChildren())
 
 }

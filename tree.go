@@ -39,6 +39,7 @@ func (this *XmlNode) GetType() int {
 	return int(C.XmlNode_fetch_type(this.handler))
 }
 func (this *XmlNode) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlNode) GetChildren() *XmlNode {
@@ -112,6 +113,7 @@ func (this *XmlNode) GetNs() *XmlNs {
 	return this._ns
 }
 func (this *XmlNode) GetContent() string {
+	if this.handler.content==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.content)))
 }
 func (this *XmlNode) GetProperties() *XmlAttr {
@@ -163,6 +165,7 @@ type XmlAttr struct {
 	// psvi void* // Private
 }
 func (this *XmlAttr) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlAttr) GetChildren() *XmlNode {
@@ -258,9 +261,11 @@ func (this *XmlNs) GetNext() *XmlNs {
 	return this._next
 }
 func (this *XmlNs) GetHref() string {
+	if this.handler.href==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.href)))
 }
 func (this *XmlNs) GetPrefix() string {
+	if this.handler.prefix==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.prefix)))
 }
 func (this *XmlNs) GetContext() *XmlDoc {
@@ -292,6 +297,7 @@ type XmlDoc struct {
 	// psvi void* // Private
 }
 func (this *XmlDoc) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlDoc) GetChildren() *XmlNode {
@@ -391,12 +397,15 @@ func (this *XmlDoc) GetOldNs() *XmlNs {
 	return this._oldNs
 }
 func (this *XmlDoc) GetVersion() string {
+	if this.handler.version==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlDoc) GetEncoding() string {
+	if this.handler.encoding==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
 func (this *XmlDoc) GetURL() string {
+	if this.handler.URL==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.URL)))
 }
 func (this *XmlDoc) GetCharset() int {
@@ -435,6 +444,7 @@ type XmlDtd struct {
 	// pentities void* // Private
 }
 func (this *XmlDtd) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlDtd) GetChildren() *XmlNode {
@@ -498,9 +508,11 @@ func (this *XmlDtd) GetDoc() *XmlDoc {
 	return this._doc
 }
 func (this *XmlDtd) GetExternalID() string {
+	if this.handler.ExternalID==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.ExternalID)))
 }
 func (this *XmlDtd) GetSystemID() string {
+	if this.handler.SystemID==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.SystemID)))
 }
 

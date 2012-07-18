@@ -37,6 +37,7 @@ func (this *XmlXPathObject) GetFloatval() double {
 }
 */
 func (this *XmlXPathObject) GetStringval() string {
+	if this.handler.stringval==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.stringval)))
 }
 func (this *XmlXPathObject) GetIndex() int {
@@ -197,9 +198,11 @@ func (this *XmlXPathContext) GetVarLookupFunc() xmlXPathVariableLookupFunc {
 }
 */
 func (this *XmlXPathContext) GetFunction() string {
+	if this.handler.function==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.function)))
 }
 func (this *XmlXPathContext) GetFunctionURI() string {
+	if this.handler.functionURI==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.functionURI)))
 }
 /*

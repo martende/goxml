@@ -23,9 +23,11 @@ func (this *HtmlEntityDesc) GetValue() uint {
 }
 */
 func (this *HtmlEntityDesc) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *HtmlEntityDesc) GetDesc() string {
+	if this.handler.desc==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.desc)))
 }
 /*
@@ -43,6 +45,7 @@ type HtmlElemDesc struct {
 	handler C.htmlElemDescPtr
 }
 func (this *HtmlElemDesc) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *HtmlElemDesc) GetStartTag() byte {
@@ -67,6 +70,7 @@ func (this *HtmlElemDesc) GetIsinline() byte {
 	return byte(this.handler.isinline)
 }
 func (this *HtmlElemDesc) GetDesc() string {
+	if this.handler.desc==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.desc)))
 }
 /*
@@ -75,6 +79,7 @@ func (this *HtmlElemDesc) GetSubelts() char** {
 }
 */
 func (this *HtmlElemDesc) GetDefaultsubelt() string {
+	if this.handler.defaultsubelt==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.defaultsubelt)))
 }
 /*

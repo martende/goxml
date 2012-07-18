@@ -95,9 +95,11 @@ func (this *XmlParserCtxt) GetReplaceEntities() int {
 	return int(this.handler.replaceEntities)
 }
 func (this *XmlParserCtxt) GetVersion() string {
+	if this.handler.version==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlParserCtxt) GetEncoding() string {
+	if this.handler.encoding==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
 func (this *XmlParserCtxt) GetStandalone() int {
@@ -188,9 +190,11 @@ func (this *XmlParserCtxt) GetToken() int {
 	return int(this.handler.token)
 }
 func (this *XmlParserCtxt) GetDirectory() string {
+	if this.handler.directory==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.directory)))
 }
 func (this *XmlParserCtxt) GetName() string {
+	if this.handler.name==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlParserCtxt) GetNameNr() int {
@@ -224,12 +228,15 @@ func (this *XmlParserCtxt) GetInSubset() int {
 	return int(this.handler.inSubset)
 }
 func (this *XmlParserCtxt) GetIntSubName() string {
+	if this.handler.intSubName==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.intSubName)))
 }
 func (this *XmlParserCtxt) GetExtSubURI() string {
+	if this.handler.extSubURI==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubURI)))
 }
 func (this *XmlParserCtxt) GetExtSubSystem() string {
+	if this.handler.extSubSystem==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubSystem)))
 }
 func (this *XmlParserCtxt) GetSpaceNr() int {
@@ -297,12 +304,15 @@ func (this *XmlParserCtxt) GetDocdict() int {
 	return int(this.handler.docdict)
 }
 func (this *XmlParserCtxt) GetStr_xml() string {
+	if this.handler.str_xml==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml)))
 }
 func (this *XmlParserCtxt) GetStr_xmlns() string {
+	if this.handler.str_xmlns==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xmlns)))
 }
 func (this *XmlParserCtxt) GetStr_xml_ns() string {
+	if this.handler.str_xml_ns==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml_ns)))
 }
 func (this *XmlParserCtxt) GetSax2() int {
@@ -423,18 +433,23 @@ func (this *XmlParserInput) GetBuf() xmlParserInputBufferPtr {
 }
 */
 func (this *XmlParserInput) GetFilename() string {
+	if this.handler.filename==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.filename)))
 }
 func (this *XmlParserInput) GetDirectory() string {
+	if this.handler.directory==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.directory)))
 }
 func (this *XmlParserInput) GetBase() string {
+	if this.handler.base==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.base)))
 }
 func (this *XmlParserInput) GetCur() string {
+	if this.handler.cur==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.cur)))
 }
 func (this *XmlParserInput) GetEnd() string {
+	if this.handler.end==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.end)))
 }
 func (this *XmlParserInput) GetLength() int {
@@ -457,9 +472,11 @@ func (this *XmlParserInput) GetFree() xmlParserInputDeallocate {
 }
 */
 func (this *XmlParserInput) GetEncoding() string {
+	if this.handler.encoding==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
 func (this *XmlParserInput) GetVersion() string {
+	if this.handler.version==nil { return "" }
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlParserInput) GetStandalone() int {

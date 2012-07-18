@@ -44,17 +44,37 @@ func main() {
 	// or so 
 	// goxml.XmlElemDump(os.Stderr,nil,root)
 	
-	// Get Children 
+	// Get Children libxml2 api
+	fmt.Printf("Print Root children via libxml2 api root=%08x\n",root.GetHandler())
+	for cur_node:=root.GetChildren();cur_node!=nil;cur_node = cur_node.GetNext() {
+		switch cur_node.GetType() {
+			case goxml.XML_ELEMENT_NODE:
+				fmt.Printf("node:%08x type: Element, name: %s\n",cur_node.GetHandler(), cur_node.GetName())
+			case goxml.XML_TEXT_NODE:
+				fmt.Printf("node:%08x type: XML_TEXT_NODE, name: %s\n",cur_node.GetHandler(), cur_node.GetName())
+			default:
+				fmt.Printf("node:%08x type: %d, name: %s\n",cur_node.GetHandler(), cur_node.GetType(),cur_node.GetName())
+		}
+    }
 	
+	// Get Children as list
+	fmt.Printf("Print Root children via root.GetAllChildren root=%08x\n",root.GetHandler())
 	childNodes:= root.GetAllChildren()
 	fmt.Fprintf(os.Stdout,"Root have %d children\n" , len(childNodes) )
 	for i,v := range childNodes {
 		fmt.Fprintf(os.Stdout,"%d. Node[%s] Type[%v]\n",i,v.GetName(),v.GetType())
 	}
 	
-	// Get attrs
+	// Get Attrs as list
 	attrs:= childNodes[1].GetAllProperties()
 	for i,v := range attrs {
-		fmt.Fprintf(os.Stdout,"%d. Node[%s] Attr %s\n",i,childNodes[1].GetName() , v.GetName())
+		fmt.Fprintf(os.Stdout,"%d. Node[%s] Attr %s has value %s\n",i,childNodes[1].GetName() , v.GetName(), v.GetChildren().GetName() )
 	}
+	
+	// Get Attrs as Map
+	
+	mapattrs:= childNodes[1].GetMapProperties()
+	
+	fmt.Fprintf(os.Stdout,"mapattrs = %v\n",mapattrs)
+	
 }

@@ -387,6 +387,7 @@ class FileConverter():
 				inner += "\treturn this._"+elName+"\n}\n"
 			elif goType== 'string':
 				inner = "func (this *%(goStructName)s) Get%(fieldName)s() %(goType)s {\n" % {'goType':goType,'fieldName':fieldName,'goStructName':goStructName}
+				inner += "\tif this.handler."+elName+"==nil { return \"\" }\n";
 				inner += "\treturn C.GoString((*C.char)(unsafe.Pointer(this.handler."+elName+")))\n}\n"
 				self.unsafe=True
 			else:
