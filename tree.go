@@ -617,6 +617,23 @@ func XmlAddChild(parent *XmlNode,cur *XmlNode) (g_ret *XmlNode,err error) {
 	return
 }
 /* 
+	   Function: xmlNodeGetContent
+	   ReturnType: xmlChar*
+	   Args: (('cur', ['xmlNodePtr'], None),)
+*/
+func XmlNodeGetContent(cur *XmlNode) string {
+	var c_cur C.xmlNodePtr=nil
+	if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+
+	c_ret := C.xmlNodeGetContent(c_cur)
+
+
+
+	if c_ret == nil {return ""}
+	g_ret:=C.GoString((*C.char)(unsafe.Pointer(c_ret)))
+	return g_ret
+}
+/* 
 	   Function: xmlDocDump
 	   ReturnType: int
 	   Args: (('f', ['FILE', '*'], None), ('cur', ['xmlDocPtr'], None))
@@ -659,6 +676,24 @@ func XmlNewProp(node *XmlNode,name string,value string) (g_ret *XmlAttr,err erro
 		g_ret =  &XmlAttr{handler:(C.xmlAttrPtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: xmlReplaceNode
+	   ReturnType: xmlNodePtr
+	   Args: (('old', ['xmlNodePtr'], None), ('cur', ['xmlNodePtr'], None))
+*/
+func XmlReplaceNode(old *XmlNode,cur *XmlNode) *XmlNode {
+	var c_old C.xmlNodePtr=nil
+	if old !=nil { c_old = (C.xmlNodePtr)(old.handler) }
+	var c_cur C.xmlNodePtr=nil
+	if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+
+	c_ret := C.xmlReplaceNode(c_old,c_cur)
+
+
+
+	if c_ret == nil {return nil}
+	return &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
 }
 /* 
 	   Function: xmlDocSetRootElement
@@ -763,6 +798,21 @@ func XmlNewText(content string) (g_ret *XmlNode,err error) {
 		g_ret =  &XmlNode{handler:(C.xmlNodePtr)(c_ret)}
 	}
 	return
+}
+/* 
+	   Function: xmlNodeIsText
+	   ReturnType: int
+	   Args: (('node', ['xmlNodePtr'], None),)
+*/
+func XmlNodeIsText(node *XmlNode) int {
+	var c_node C.xmlNodePtr=nil
+	if node !=nil { c_node = (C.xmlNodePtr)(node.handler) }
+
+	c_ret := C.xmlNodeIsText(c_node)
+
+
+
+	return int(c_ret)
 }
 /* 
 	   Function: xmlFreeDoc

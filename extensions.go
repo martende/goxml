@@ -67,14 +67,19 @@ func (this *XmlNode ) GetAllProperties() []*XmlAttr {
 	GetProperties extension - return all attributes as map
 */
 func (this *XmlNode ) GetMapProperties() map[string]string {
-	ret:=map[string] string
-	i:=0
+	var ret = map[string] string {}
 	for cur_node:= this.handler.properties; cur_node!=nil; cur_node = cur_node.next {
 		
 		if cur_node.name != nil {
 			name:=C.GoString((*C.char)(unsafe.Pointer(cur_node.name)))
 			value:=""
-			if cur_node.children != nil and cur_node.children != nil 
+			if cur_node.children != nil {
+				content:=C.xmlNodeGetContent((*C.xmlNode)(unsafe.Pointer(cur_node.children)))
+				if content != nil {
+					value = C.GoString((*C.char)(unsafe.Pointer(content)))
+				}
+			}
+			ret[name]=value
 		}
 	}
 	return ret

@@ -435,6 +435,9 @@ reader_IMPORTS = (
 )
 
 tree_IMPORTS = (
+	'xmlNodeGetContent',
+	'xmlNodeIsText',
+	'xmlReplaceNode',
 	'xmlElemDump',
 	'xmlDocGetRootElement',
 	'xmlDocDump',

@@ -7,27 +7,27 @@ import (
 )
 
 var xmlData = `<?xml version="1.0"?>
-	<catalog>
-	   <book id="bk101" available="true">
-		  <author>Gambardella, Matthew</author>
-		  <title>XML Developer's Guide</title>
-		  <genre>Computer</genre>
-		  <price>44.95</price>
-		  <publish_date>2000-10-01</publish_date>
-		  <description>An in-depth look at creating applications 
-		  with XML.</description>
-	   </book>
-	   <book id="bk102" available="false">
-		  <author>Ralls, Kim</author>
-		  <title>Midnight Rain</title>
-		  <genre>Fantasy</genre>
-		  <price>5.95</price>
-		  <publish_date>2000-12-16</publish_date>
-		  <description>A former architect battles corporate zombies, 
-		  an evil sorceress, and her own childhood to become queen 
-		  of the world.</description>
-	   </book>
-	</catalog>`
+<catalog>
+<book id="bk101" available="true">
+<author>Gambardella, Matthew</author>
+<title>XML Developer's Guide</title>
+<genre>Computer</genre>
+<price>44.95</price>
+<publish_date>2000-10-01</publish_date>
+<description>An in-depth look at creating applications 
+with XML.</description>
+</book>
+<book id="bk102" available="false">
+<author>Ralls, Kim</author>
+<title>Midnight Rain</title>
+<genre>Fantasy</genre>
+<price>5.95</price>
+<publish_date>2000-12-16</publish_date>
+<description>A former architect battles corporate zombies, 
+an evil sorceress, and her own childhood to become queen 
+of the world.</description>
+</book>
+</catalog>`
 	
 func main() {
 	
@@ -51,7 +51,7 @@ func main() {
 			case goxml.XML_ELEMENT_NODE:
 				fmt.Printf("node:%08x type: Element, name: %s\n",cur_node.GetHandler(), cur_node.GetName())
 			case goxml.XML_TEXT_NODE:
-				fmt.Printf("node:%08x type: XML_TEXT_NODE, name: %s\n",cur_node.GetHandler(), cur_node.GetName())
+				fmt.Printf("node:%08x type: XML_TEXT_NODE, name: %s Content:[%s]\n",cur_node.GetHandler(), cur_node.GetName(),goxml.XmlNodeGetContent(cur_node))
 			default:
 				fmt.Printf("node:%08x type: %d, name: %s\n",cur_node.GetHandler(), cur_node.GetType(),cur_node.GetName())
 		}
@@ -68,7 +68,7 @@ func main() {
 	// Get Attrs as list
 	attrs:= childNodes[1].GetAllProperties()
 	for i,v := range attrs {
-		fmt.Fprintf(os.Stdout,"%d. Node[%s] Attr %s has value %s\n",i,childNodes[1].GetName() , v.GetName(), v.GetChildren().GetName() )
+		fmt.Fprintf(os.Stdout,"%d. Node[%s] Attr %s has value=\"%s\"\n",i,childNodes[1].GetName() , v.GetName(), goxml.XmlNodeGetContent(v.GetChildren()) )
 	}
 	
 	// Get Attrs as Map
