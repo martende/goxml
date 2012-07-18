@@ -28,6 +28,7 @@ class FileConverter():
 		self.gofilename = re.sub(r'\.h$',".go",self.filename)
 		self.unsafe = False
 		self.consts = []
+		self.reports = []
 	def calcArgType(self,arg,sig):
 		if arg == 'ret':
 			return "".join(sig[0])
@@ -294,10 +295,13 @@ class FileConverter():
 				flist.append(funcCode)
 				
 				if errs:
+					self.reports.append({"fileName":self.filename,"funcName":fName,"status":'ERROR'})
 					self.log("Errored %s"%fName)
 				else:
+					self.reports.append({"fileName":self.filename,"funcName":fName,"status":'OK'})
 					self.log("Process %s"%fName)
-			
+			else:
+				self.reports.append({"fileName":self.filename,"funcName":fName,"status":'SKIP'})
 		return flist
 	def preprocessArgsSig(self,sig):
 		c = 1
@@ -574,14 +578,34 @@ def processImports():
 			FUNC_DESCS.insert(0,('CALC',return_mapper('ret','ret','%s == nil')))
 			FUNC_DESCS.insert(0,('r',IMPORTS[i],None,None))
 			
-			
+
+def createReport(reports):
+	files = {}
+	for r in reports:
+		if r['fileName'] not in files:
+			files[r['fileName']] = {
+				'fileName':r['fileName'],
+				'total' : 0,
+				'skiped' : 0,
+				'errored' : 0,
+				'oks' : 0
+			}
+		s = r['status']
+		f = r['fileName']
+		files[f]['total']+=1
+		if s == 'OK':
+			files[f]['oks']+=1
+	for k in files:
+		print "- %(fileName)s implemented %(oks)i from %(total)i functions" % files[k]
 if not os.path.exists(TMP):
 	os.mkdir(TMP) 
 
 convertAliases()
 processImports()
+
 consts = []
 includes = []
+reports = []
 for include in INCLUDES:
 	if VERBOSE:
 		print "Parse: " + include 
@@ -589,7 +613,7 @@ for include in INCLUDES:
 	p.processFile()
 	includes.append(p.filename)
 	consts += p.consts
-
+	reports += p.reports
 consts = dict(map(lambda x : (x ,1 ),consts)).keys()
 incls = "\n".join(["#include <libxml/%s>" % fn for fn in includes])
 
@@ -607,3 +631,5 @@ import "C"
 
 %(consts_list)s
 """ % varsdict)
+
+createReport(reports)

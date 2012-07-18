@@ -12,15 +12,16 @@ f.valid replaced as f.GetValid()
 - all data are strings
 
 ### Supported libxml interfaces
-- tree.h
-- parser.h
-- xmlreader.h
-- xmlmemory.h
-- xmlstring.h
-- HTMLparser.h
-- encoding.h
-- xpath.h
-- xpathInternals.h
+- encoding.h implemented 0 from 19 functions
+- xpath.h implemented 4 from 38 functions
+- xmlreader.h implemented 13 from 85 functions
+- tree.h implemented 16 from 157 functions
+- xpathInternals.h implemented 1 from 117 functions
+- xmlmemory.h implemented 1 from 17 functions
+- HTMLparser.h implemented 34 from 38 functions
+- parser.h implemented 11 from 70 functions
+- xmlstring.h implemented 0 from 29 functions
+
 
 ### Supported libxml structures
 - XmlNode
