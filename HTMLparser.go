@@ -1,4 +1,5 @@
 package goxml
+
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/HTMLparser.h>
@@ -146,7 +147,7 @@ func HtmlCtxtReadDoc(ctxt *XmlParserCtxt,cur string,URL string,encoding string,o
 	c_ret := C.htmlCtxtReadDoc(c_ctxt,c_cur,c_URL,c_encoding,c_options)
 
 	if c_ret == nil {
-		err = fmt.Errorf("htmlCtxtReadDoc errno %d" ,c_ret)
+		err = fmt.Errorf("htmlCtxtReadDoc errnox %d" ,c_ret)
 	} else {
 		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
 	}
@@ -252,6 +253,7 @@ func HtmlCreateMemoryParserCtxt(buffer string) (g_ret *XmlParserCtxt,err error) 
 	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
 	defer C.free(unsafe.Pointer(c_buffer))
 	c_size:=C.int(len(buffer)*1)
+
 	c_ret := C.htmlCreateMemoryParserCtxt(c_buffer,c_size)
 
 	if c_ret == nil {

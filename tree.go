@@ -831,3 +831,58 @@ func XmlFreeDoc(cur *XmlDoc) {
 }
 
 
+/* 
+		MANUAL !!!
+	   Function: XmlNodeDump
+	   ReturnType: string
+	   Args: (('cur', ['xmlDocPtr'], None),)
+*/
+
+func XmlNodeDump(doc *XmlDoc,cur *XmlNode,level int,format int) (g_ret string,err error) {
+	var nodeBuffer C.xmlBufferPtr = C.xmlBufferCreate()
+	defer C.xmlBufferFree(nodeBuffer)
+
+    var c_doc C.xmlDocPtr=nil
+    if doc !=nil { c_doc = (C.xmlDocPtr)(doc.handler) }
+    var c_cur C.xmlNodePtr=nil
+    if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+    c_level := C.int(level)
+    c_format := C.int(format)
+
+    c_ret := C.xmlNodeDump(nodeBuffer,c_doc,c_cur,c_level,c_format)
+    if c_ret == -1 {
+		err = fmt.Errorf("XmlNodeDump errno %d" ,c_ret)
+	} else {
+		g_ret = C.GoString((*C.char)(unsafe.Pointer(nodeBuffer.content)))
+	}
+
+    return
+}
+
+/*
+		MANUAL !!!
+	   Function: XmlNodeDumpEx
+	   ReturnType: string
+	   Args: XmlNode,level,format
+*/
+func XmlNodeDumpEx(cur *XmlNode,level int,format int) (g_ret string,err error) {
+	var nodeBuffer C.xmlBufferPtr = C.xmlBufferCreate()
+	defer C.xmlBufferFree(nodeBuffer)
+
+	c_doc := (C.xmlDocPtr)(unsafe.Pointer(cur.handler.doc))
+
+	var c_cur C.xmlNodePtr=nil
+	if cur !=nil { c_cur = (C.xmlNodePtr)(cur.handler) }
+	c_level := C.int(level)
+	c_format := C.int(format)
+
+	c_ret := C.xmlNodeDump(nodeBuffer,c_doc,c_cur,c_level,c_format)
+	if c_ret == -1 {
+		err = fmt.Errorf("XmlNodeDump errno %d" ,c_ret)
+	} else {
+		g_ret = C.GoString((*C.char)(unsafe.Pointer(nodeBuffer.content)))
+	}
+
+	return
+}
+
