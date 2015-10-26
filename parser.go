@@ -1,4 +1,5 @@
 package goxml
+
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/parser.h>
@@ -8,56 +9,54 @@ import "C"
 import "unsafe"
 import "fmt"
 
-
-
 /*
-	Element inputTab has not registered type xmlParserInputPtr* 
+	Element inputTab has not registered type xmlParserInputPtr*
 	Element inputTab not recognized getter for elType:xmlParserInputPtr* goType:xmlParserInputPtr*
-	Element nodeTab has not registered type xmlNodePtr* 
+	Element nodeTab has not registered type xmlNodePtr*
 	Element nodeTab not recognized getter for elType:xmlNodePtr* goType:xmlNodePtr*
-	Element node_seq has not registered type xmlParserNodeInfoSeq 
+	Element node_seq has not registered type xmlParserNodeInfoSeq
 	Element node_seq not recognized getter for elType:xmlParserNodeInfoSeq goType:xmlParserNodeInfoSeq
-	Element vctxt has not registered type xmlValidCtxt 
+	Element vctxt has not registered type xmlValidCtxt
 	Element vctxt not recognized getter for elType:xmlValidCtxt goType:xmlValidCtxt
-	Element instate has not registered type xmlParserInputState 
+	Element instate has not registered type xmlParserInputState
 	Element instate not recognized getter for elType:xmlParserInputState goType:xmlParserInputState
-	Element nameTab has not registered type xmlChar** 
+	Element nameTab has not registered type xmlChar**
 	Element nameTab not recognized getter for elType:xmlChar** goType:xmlChar**
-	Element nbChars has not registered type long 
+	Element nbChars has not registered type long
 	Element nbChars not recognized getter for elType:long goType:long
-	Element checkIndex has not registered type long 
+	Element checkIndex has not registered type long
 	Element checkIndex not recognized getter for elType:long goType:long
-	Element atts has not registered type xmlChar** 
+	Element atts has not registered type xmlChar**
 	Element atts not recognized getter for elType:xmlChar** goType:xmlChar**
-	Element nsTab has not registered type xmlChar** 
+	Element nsTab has not registered type xmlChar**
 	Element nsTab not recognized getter for elType:xmlChar** goType:xmlChar**
-	Element pushTab has not registered type void** 
+	Element pushTab has not registered type void**
 	Element pushTab not recognized getter for elType:void** goType:void**
-	Element attsDefault has not registered type xmlHashTablePtr 
+	Element attsDefault has not registered type xmlHashTablePtr
 	Element attsDefault not recognized getter for elType:xmlHashTablePtr goType:xmlHashTablePtr
-	Element attsSpecial has not registered type xmlHashTablePtr 
+	Element attsSpecial has not registered type xmlHashTablePtr
 	Element attsSpecial not recognized getter for elType:xmlHashTablePtr goType:xmlHashTablePtr
-	Element lastError has not registered type xmlError 
+	Element lastError has not registered type xmlError
 	Element lastError not recognized getter for elType:xmlError goType:xmlError
-	Element parseMode has not registered type xmlParserMode 
+	Element parseMode has not registered type xmlParserMode
 	Element parseMode not recognized getter for elType:xmlParserMode goType:xmlParserMode
-	Element nbentities has not registered type unsigned long 
+	Element nbentities has not registered type unsigned long
 	Element nbentities not recognized getter for elType:unsigned long goType:unsigned long
-	Element sizeentities has not registered type unsigned long 
+	Element sizeentities has not registered type unsigned long
 	Element sizeentities not recognized getter for elType:unsigned long goType:unsigned long
-	Element nodeInfo has not registered type xmlParserNodeInfo* 
+	Element nodeInfo has not registered type xmlParserNodeInfo*
 	Element nodeInfo not recognized getter for elType:xmlParserNodeInfo* goType:xmlParserNodeInfo*
-	Element nodeInfoTab has not registered type xmlParserNodeInfo* 
+	Element nodeInfoTab has not registered type xmlParserNodeInfo*
 	Element nodeInfoTab not recognized getter for elType:xmlParserNodeInfo* goType:xmlParserNodeInfo*
 
 */
 type XmlParserCtxt struct {
 	handler C.xmlParserCtxtPtr
-	_sax *XmlSAXHandler
+	_sax    *XmlSAXHandler
 	// userData void* // Private
 	_myDoc *XmlDoc
 	_input *XmlParserInput
-	_node *XmlNode
+	_node  *XmlNode
 	// space int* // Private
 	// spaceTab int* // Private
 	_entity *XmlParserInput
@@ -68,6 +67,7 @@ type XmlParserCtxt struct {
 	_freeElems *XmlNode
 	_freeAttrs *XmlAttr
 }
+
 func (this *XmlParserCtxt) GetSax() *XmlSAXHandler {
 	if this.handler.sax == nil {
 		return nil
@@ -95,11 +95,15 @@ func (this *XmlParserCtxt) GetReplaceEntities() int {
 	return int(this.handler.replaceEntities)
 }
 func (this *XmlParserCtxt) GetVersion() string {
-	if this.handler.version==nil { return "" }
+	if this.handler.version == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlParserCtxt) GetEncoding() string {
-	if this.handler.encoding==nil { return "" }
+	if this.handler.encoding == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
 func (this *XmlParserCtxt) GetStandalone() int {
@@ -124,6 +128,7 @@ func (this *XmlParserCtxt) GetInputNr() int {
 func (this *XmlParserCtxt) GetInputMax() int {
 	return int(this.handler.inputMax)
 }
+
 /*
 func (this *XmlParserCtxt) GetInputTab() xmlParserInputPtr* {
 	return int(this.handler.inputTab)
@@ -145,6 +150,7 @@ func (this *XmlParserCtxt) GetNodeNr() int {
 func (this *XmlParserCtxt) GetNodeMax() int {
 	return int(this.handler.nodeMax)
 }
+
 /*
 func (this *XmlParserCtxt) GetNodeTab() xmlNodePtr* {
 	return int(this.handler.nodeTab)
@@ -153,6 +159,7 @@ func (this *XmlParserCtxt) GetNodeTab() xmlNodePtr* {
 func (this *XmlParserCtxt) GetRecord_info() int {
 	return int(this.handler.record_info)
 }
+
 /*
 func (this *XmlParserCtxt) GetNode_seq() xmlParserNodeInfoSeq {
 	return int(this.handler.node_seq)
@@ -176,6 +183,7 @@ func (this *XmlParserCtxt) GetValid() int {
 func (this *XmlParserCtxt) GetValidate() int {
 	return int(this.handler.validate)
 }
+
 /*
 func (this *XmlParserCtxt) GetVctxt() xmlValidCtxt {
 	return int(this.handler.vctxt)
@@ -190,11 +198,15 @@ func (this *XmlParserCtxt) GetToken() int {
 	return int(this.handler.token)
 }
 func (this *XmlParserCtxt) GetDirectory() string {
-	if this.handler.directory==nil { return "" }
+	if this.handler.directory == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.directory)))
 }
 func (this *XmlParserCtxt) GetName() string {
-	if this.handler.name==nil { return "" }
+	if this.handler.name == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.name)))
 }
 func (this *XmlParserCtxt) GetNameNr() int {
@@ -203,6 +215,7 @@ func (this *XmlParserCtxt) GetNameNr() int {
 func (this *XmlParserCtxt) GetNameMax() int {
 	return int(this.handler.nameMax)
 }
+
 /*
 func (this *XmlParserCtxt) GetNameTab() xmlChar** {
 	return int(this.handler.nameTab)
@@ -228,15 +241,21 @@ func (this *XmlParserCtxt) GetInSubset() int {
 	return int(this.handler.inSubset)
 }
 func (this *XmlParserCtxt) GetIntSubName() string {
-	if this.handler.intSubName==nil { return "" }
+	if this.handler.intSubName == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.intSubName)))
 }
 func (this *XmlParserCtxt) GetExtSubURI() string {
-	if this.handler.extSubURI==nil { return "" }
+	if this.handler.extSubURI == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubURI)))
 }
 func (this *XmlParserCtxt) GetExtSubSystem() string {
-	if this.handler.extSubSystem==nil { return "" }
+	if this.handler.extSubSystem == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.extSubSystem)))
 }
 func (this *XmlParserCtxt) GetSpaceNr() int {
@@ -292,6 +311,7 @@ func (this *XmlParserCtxt) GetDict() *XmlDict {
 	this._dict.handler = (C.xmlDictPtr)(unsafe.Pointer(this.handler.dict))
 	return this._dict
 }
+
 /*
 func (this *XmlParserCtxt) GetAtts() xmlChar** {
 	return int(this.handler.atts)
@@ -304,15 +324,21 @@ func (this *XmlParserCtxt) GetDocdict() int {
 	return int(this.handler.docdict)
 }
 func (this *XmlParserCtxt) GetStr_xml() string {
-	if this.handler.str_xml==nil { return "" }
+	if this.handler.str_xml == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml)))
 }
 func (this *XmlParserCtxt) GetStr_xmlns() string {
-	if this.handler.str_xmlns==nil { return "" }
+	if this.handler.str_xmlns == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xmlns)))
 }
 func (this *XmlParserCtxt) GetStr_xml_ns() string {
-	if this.handler.str_xml_ns==nil { return "" }
+	if this.handler.str_xml_ns == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.str_xml_ns)))
 }
 func (this *XmlParserCtxt) GetSax2() int {
@@ -324,6 +350,7 @@ func (this *XmlParserCtxt) GetNsNr() int {
 func (this *XmlParserCtxt) GetNsMax() int {
 	return int(this.handler.nsMax)
 }
+
 /*
 func (this *XmlParserCtxt) GetNsTab() xmlChar** {
 	return int(this.handler.nsTab)
@@ -379,6 +406,7 @@ func (this *XmlParserCtxt) GetFreeAttrs() *XmlAttr {
 	this._freeAttrs.handler = (C.xmlAttrPtr)(unsafe.Pointer(this.handler.freeAttrs))
 	return this._freeAttrs
 }
+
 /*
 func (this *XmlParserCtxt) GetLastError() xmlError {
 	return int(this.handler.lastError)
@@ -410,46 +438,58 @@ func (this *XmlParserCtxt) GetNodeInfoNr() int {
 func (this *XmlParserCtxt) GetNodeInfoMax() int {
 	return int(this.handler.nodeInfoMax)
 }
+
 /*
 func (this *XmlParserCtxt) GetNodeInfoTab() xmlParserNodeInfo* {
 	return int(this.handler.nodeInfoTab)
 }
 */
 /*
-	Element buf has not registered type xmlParserInputBufferPtr 
+	Element buf has not registered type xmlParserInputBufferPtr
 	Element buf not recognized getter for elType:xmlParserInputBufferPtr goType:xmlParserInputBufferPtr
-	Element consumed has not registered type unsigned long 
+	Element consumed has not registered type unsigned long
 	Element consumed not recognized getter for elType:unsigned long goType:unsigned long
-	Element free has not registered type xmlParserInputDeallocate 
+	Element free has not registered type xmlParserInputDeallocate
 	Element free not recognized getter for elType:xmlParserInputDeallocate goType:xmlParserInputDeallocate
 
 */
 type XmlParserInput struct {
 	handler C.xmlParserInputPtr
 }
+
 /*
 func (this *XmlParserInput) GetBuf() xmlParserInputBufferPtr {
 	return int(this.handler.buf)
 }
 */
 func (this *XmlParserInput) GetFilename() string {
-	if this.handler.filename==nil { return "" }
+	if this.handler.filename == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.filename)))
 }
 func (this *XmlParserInput) GetDirectory() string {
-	if this.handler.directory==nil { return "" }
+	if this.handler.directory == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.directory)))
 }
 func (this *XmlParserInput) GetBase() string {
-	if this.handler.base==nil { return "" }
+	if this.handler.base == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.base)))
 }
 func (this *XmlParserInput) GetCur() string {
-	if this.handler.cur==nil { return "" }
+	if this.handler.cur == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.cur)))
 }
 func (this *XmlParserInput) GetEnd() string {
-	if this.handler.end==nil { return "" }
+	if this.handler.end == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.end)))
 }
 func (this *XmlParserInput) GetLength() int {
@@ -461,6 +501,7 @@ func (this *XmlParserInput) GetLine() int {
 func (this *XmlParserInput) GetCol() int {
 	return int(this.handler.col)
 }
+
 /*
 func (this *XmlParserInput) GetConsumed() unsigned long {
 	return int(this.handler.consumed)
@@ -472,11 +513,15 @@ func (this *XmlParserInput) GetFree() xmlParserInputDeallocate {
 }
 */
 func (this *XmlParserInput) GetEncoding() string {
-	if this.handler.encoding==nil { return "" }
+	if this.handler.encoding == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.encoding)))
 }
 func (this *XmlParserInput) GetVersion() string {
-	if this.handler.version==nil { return "" }
+	if this.handler.version == nil {
+		return ""
+	}
 	return C.GoString((*C.char)(unsafe.Pointer(this.handler.version)))
 }
 func (this *XmlParserInput) GetStandalone() int {
@@ -485,67 +530,68 @@ func (this *XmlParserInput) GetStandalone() int {
 func (this *XmlParserInput) GetId() int {
 	return int(this.handler.id)
 }
+
 /*
-	Element internalSubset has not registered type internalSubsetSAXFunc 
+	Element internalSubset has not registered type internalSubsetSAXFunc
 	Element internalSubset not recognized getter for elType:internalSubsetSAXFunc goType:internalSubsetSAXFunc
-	Element isStandalone has not registered type isStandaloneSAXFunc 
+	Element isStandalone has not registered type isStandaloneSAXFunc
 	Element isStandalone not recognized getter for elType:isStandaloneSAXFunc goType:isStandaloneSAXFunc
-	Element hasInternalSubset has not registered type hasInternalSubsetSAXFunc 
+	Element hasInternalSubset has not registered type hasInternalSubsetSAXFunc
 	Element hasInternalSubset not recognized getter for elType:hasInternalSubsetSAXFunc goType:hasInternalSubsetSAXFunc
-	Element hasExternalSubset has not registered type hasExternalSubsetSAXFunc 
+	Element hasExternalSubset has not registered type hasExternalSubsetSAXFunc
 	Element hasExternalSubset not recognized getter for elType:hasExternalSubsetSAXFunc goType:hasExternalSubsetSAXFunc
-	Element resolveEntity has not registered type resolveEntitySAXFunc 
+	Element resolveEntity has not registered type resolveEntitySAXFunc
 	Element resolveEntity not recognized getter for elType:resolveEntitySAXFunc goType:resolveEntitySAXFunc
-	Element getEntity has not registered type getEntitySAXFunc 
+	Element getEntity has not registered type getEntitySAXFunc
 	Element getEntity not recognized getter for elType:getEntitySAXFunc goType:getEntitySAXFunc
-	Element entityDecl has not registered type entityDeclSAXFunc 
+	Element entityDecl has not registered type entityDeclSAXFunc
 	Element entityDecl not recognized getter for elType:entityDeclSAXFunc goType:entityDeclSAXFunc
-	Element notationDecl has not registered type notationDeclSAXFunc 
+	Element notationDecl has not registered type notationDeclSAXFunc
 	Element notationDecl not recognized getter for elType:notationDeclSAXFunc goType:notationDeclSAXFunc
-	Element attributeDecl has not registered type attributeDeclSAXFunc 
+	Element attributeDecl has not registered type attributeDeclSAXFunc
 	Element attributeDecl not recognized getter for elType:attributeDeclSAXFunc goType:attributeDeclSAXFunc
-	Element elementDecl has not registered type elementDeclSAXFunc 
+	Element elementDecl has not registered type elementDeclSAXFunc
 	Element elementDecl not recognized getter for elType:elementDeclSAXFunc goType:elementDeclSAXFunc
-	Element unparsedEntityDecl has not registered type unparsedEntityDeclSAXFunc 
+	Element unparsedEntityDecl has not registered type unparsedEntityDeclSAXFunc
 	Element unparsedEntityDecl not recognized getter for elType:unparsedEntityDeclSAXFunc goType:unparsedEntityDeclSAXFunc
-	Element setDocumentLocator has not registered type setDocumentLocatorSAXFunc 
+	Element setDocumentLocator has not registered type setDocumentLocatorSAXFunc
 	Element setDocumentLocator not recognized getter for elType:setDocumentLocatorSAXFunc goType:setDocumentLocatorSAXFunc
-	Element startDocument has not registered type startDocumentSAXFunc 
+	Element startDocument has not registered type startDocumentSAXFunc
 	Element startDocument not recognized getter for elType:startDocumentSAXFunc goType:startDocumentSAXFunc
-	Element endDocument has not registered type endDocumentSAXFunc 
+	Element endDocument has not registered type endDocumentSAXFunc
 	Element endDocument not recognized getter for elType:endDocumentSAXFunc goType:endDocumentSAXFunc
-	Element startElement has not registered type startElementSAXFunc 
+	Element startElement has not registered type startElementSAXFunc
 	Element startElement not recognized getter for elType:startElementSAXFunc goType:startElementSAXFunc
-	Element endElement has not registered type endElementSAXFunc 
+	Element endElement has not registered type endElementSAXFunc
 	Element endElement not recognized getter for elType:endElementSAXFunc goType:endElementSAXFunc
-	Element reference has not registered type referenceSAXFunc 
+	Element reference has not registered type referenceSAXFunc
 	Element reference not recognized getter for elType:referenceSAXFunc goType:referenceSAXFunc
-	Element characters has not registered type charactersSAXFunc 
+	Element characters has not registered type charactersSAXFunc
 	Element characters not recognized getter for elType:charactersSAXFunc goType:charactersSAXFunc
-	Element ignorableWhitespace has not registered type ignorableWhitespaceSAXFunc 
+	Element ignorableWhitespace has not registered type ignorableWhitespaceSAXFunc
 	Element ignorableWhitespace not recognized getter for elType:ignorableWhitespaceSAXFunc goType:ignorableWhitespaceSAXFunc
-	Element processingInstruction has not registered type processingInstructionSAXFunc 
+	Element processingInstruction has not registered type processingInstructionSAXFunc
 	Element processingInstruction not recognized getter for elType:processingInstructionSAXFunc goType:processingInstructionSAXFunc
-	Element comment has not registered type commentSAXFunc 
+	Element comment has not registered type commentSAXFunc
 	Element comment not recognized getter for elType:commentSAXFunc goType:commentSAXFunc
-	Element warning has not registered type warningSAXFunc 
+	Element warning has not registered type warningSAXFunc
 	Element warning not recognized getter for elType:warningSAXFunc goType:warningSAXFunc
-	Element error has not registered type errorSAXFunc 
+	Element error has not registered type errorSAXFunc
 	Element error not recognized getter for elType:errorSAXFunc goType:errorSAXFunc
-	Element fatalError has not registered type fatalErrorSAXFunc 
+	Element fatalError has not registered type fatalErrorSAXFunc
 	Element fatalError not recognized getter for elType:fatalErrorSAXFunc goType:fatalErrorSAXFunc
-	Element getParameterEntity has not registered type getParameterEntitySAXFunc 
+	Element getParameterEntity has not registered type getParameterEntitySAXFunc
 	Element getParameterEntity not recognized getter for elType:getParameterEntitySAXFunc goType:getParameterEntitySAXFunc
-	Element cdataBlock has not registered type cdataBlockSAXFunc 
+	Element cdataBlock has not registered type cdataBlockSAXFunc
 	Element cdataBlock not recognized getter for elType:cdataBlockSAXFunc goType:cdataBlockSAXFunc
-	Element externalSubset has not registered type externalSubsetSAXFunc 
+	Element externalSubset has not registered type externalSubsetSAXFunc
 	Element externalSubset not recognized getter for elType:externalSubsetSAXFunc goType:externalSubsetSAXFunc
 	Element initialized not recognized getter for elType:unsigned int goType:uint
-	Element startElementNs has not registered type startElementNsSAX2Func 
+	Element startElementNs has not registered type startElementNsSAX2Func
 	Element startElementNs not recognized getter for elType:startElementNsSAX2Func goType:startElementNsSAX2Func
-	Element endElementNs has not registered type endElementNsSAX2Func 
+	Element endElementNs has not registered type endElementNsSAX2Func
 	Element endElementNs not recognized getter for elType:endElementNsSAX2Func goType:endElementNsSAX2Func
-	Element serror has not registered type xmlStructuredErrorFunc 
+	Element serror has not registered type xmlStructuredErrorFunc
 	Element serror not recognized getter for elType:xmlStructuredErrorFunc goType:xmlStructuredErrorFunc
 
 */
@@ -553,6 +599,7 @@ type XmlSAXHandler struct {
 	handler C.xmlSAXHandlerPtr
 	// _private void* // Private
 }
+
 /*
 func (this *XmlSAXHandler) GetInternalSubset() internalSubsetSAXFunc {
 	return int(this.handler.internalSubset)
@@ -709,207 +756,209 @@ func (this *XmlSAXHandler) GetSerror() xmlStructuredErrorFunc {
 }
 */
 
-/* 
-	   Function: xmlParseDoc
-	   ReturnType: xmlDocPtr
-	   Args: (('cur', ['xmlChar', '*'], None),)
+/*
+   Function: xmlParseDoc
+   ReturnType: xmlDocPtr
+   Args: (('cur', ['xmlChar', '*'], None),)
 */
-func XmlParseDoc(cur string) (g_ret *XmlDoc,err error) {
-	c_cur:= (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
+func XmlParseDoc(cur string) (g_ret *XmlDoc, err error) {
+	c_cur := (*C.xmlChar)(unsafe.Pointer(C.CString(cur)))
 	defer C.free(unsafe.Pointer(c_cur))
 
 	c_ret := C.xmlParseDoc(c_cur)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlParseDoc errno %d" ,c_ret)
+		err = fmt.Errorf("xmlParseDoc errno %d", c_ret)
 	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+		g_ret = &XmlDoc{handler: (C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlParseChunk
-	   ReturnType: int
-	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
+
+/*
+   Function: xmlParseChunk
+   ReturnType: int
+   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('terminate', ['int'], None))
 */
-func XmlParseChunk(ctxt *XmlParserCtxt,chunk string,size int,terminate int) int {
-	var c_ctxt C.xmlParserCtxtPtr=nil
-	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
-	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+func XmlParseChunk(ctxt *XmlParserCtxt, chunk string, size int, terminate int) int {
+	var c_ctxt C.xmlParserCtxtPtr = nil
+	if ctxt != nil {
+		c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler)
+	}
+	c_chunk := (*C.char)(unsafe.Pointer(C.CString(chunk)))
 	defer C.free(unsafe.Pointer(c_chunk))
 	c_size := C.int(size)
 	c_terminate := C.int(terminate)
 
-	c_ret := C.xmlParseChunk(c_ctxt,c_chunk,c_size,c_terminate)
-
-
+	c_ret := C.xmlParseChunk(c_ctxt, c_chunk, c_size, c_terminate)
 
 	return int(c_ret)
 }
-/* 
-	   Function: xmlCleanupParser
-	   ReturnType: void
-	   Args: ((None, ['void'], None),)
+
+/*
+   Function: xmlCleanupParser
+   ReturnType: void
+   Args: ((None, ['void'], None),)
 */
 func XmlCleanupParser() {
 
-
 	C.xmlCleanupParser()
 
-
-
-
 }
-/* 
-	   Function: xmlCreatePushParserCtxt
-	   ReturnType: xmlParserCtxtPtr
-	   Args: (('sax', ['xmlSAXHandlerPtr'], None), ('user_data', ['void', '*'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('filename', ['char', '*'], None))
+
+/*
+   Function: xmlCreatePushParserCtxt
+   ReturnType: xmlParserCtxtPtr
+   Args: (('sax', ['xmlSAXHandlerPtr'], None), ('user_data', ['void', '*'], None), ('chunk', ['char', '*'], None), ('size', ['int'], None), ('filename', ['char', '*'], None))
 */
-func XmlCreatePushParserCtxt(sax *XmlSAXHandler,chunk string,filename string) (g_ret *XmlParserCtxt,err error) {
-	var c_sax C.xmlSAXHandlerPtr=nil
-	if sax !=nil { c_sax = (C.xmlSAXHandlerPtr)(sax.handler) }
-	c_chunk:= (*C.char)(unsafe.Pointer(C.CString(chunk)))
+func XmlCreatePushParserCtxt(sax *XmlSAXHandler, chunk string, filename string) (g_ret *XmlParserCtxt, err error) {
+	var c_sax C.xmlSAXHandlerPtr = nil
+	if sax != nil {
+		c_sax = (C.xmlSAXHandlerPtr)(sax.handler)
+	}
+	c_chunk := (*C.char)(unsafe.Pointer(C.CString(chunk)))
 	defer C.free(unsafe.Pointer(c_chunk))
-	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+	c_filename := (*C.char)(unsafe.Pointer(C.CString(filename)))
 	defer C.free(unsafe.Pointer(c_filename))
-	c_size:=C.int(len(chunk)*1)
-	c_ret := C.xmlCreatePushParserCtxt(c_sax,nil,c_chunk,c_size,c_filename)
+	c_size := C.int(len(chunk) * 1)
+	c_ret := C.xmlCreatePushParserCtxt(c_sax, nil, c_chunk, c_size, c_filename)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlCreatePushParserCtxt errno %d" ,c_ret)
+		err = fmt.Errorf("xmlCreatePushParserCtxt errno %d", c_ret)
 	} else {
-		g_ret =  &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+		g_ret = &XmlParserCtxt{handler: (C.xmlParserCtxtPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlCtxtReadFile
-	   ReturnType: xmlDocPtr
-	   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+
+/*
+   Function: xmlCtxtReadFile
+   ReturnType: xmlDocPtr
+   Args: (('ctxt', ['xmlParserCtxtPtr'], None), ('filename', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
 */
-func XmlCtxtReadFile(ctxt *XmlParserCtxt,filename string,encoding string,options int) (g_ret *XmlDoc,err error) {
-	var c_ctxt C.xmlParserCtxtPtr=nil
-	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
-	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+func XmlCtxtReadFile(ctxt *XmlParserCtxt, filename string, encoding string, options int) (g_ret *XmlDoc, err error) {
+	var c_ctxt C.xmlParserCtxtPtr = nil
+	if ctxt != nil {
+		c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler)
+	}
+	c_filename := (*C.char)(unsafe.Pointer(C.CString(filename)))
 	defer C.free(unsafe.Pointer(c_filename))
-	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	c_encoding := (*C.char)(unsafe.Pointer(C.CString(encoding)))
 	defer C.free(unsafe.Pointer(c_encoding))
 	c_options := C.int(options)
 
-	c_ret := C.xmlCtxtReadFile(c_ctxt,c_filename,c_encoding,c_options)
+	c_ret := C.xmlCtxtReadFile(c_ctxt, c_filename, c_encoding, c_options)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlCtxtReadFile errno %d" ,c_ret)
+		err = fmt.Errorf("xmlCtxtReadFile errno %d", c_ret)
 	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+		g_ret = &XmlDoc{handler: (C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlNewParserCtxt
-	   ReturnType: xmlParserCtxtPtr
-	   Args: ((None, ['void'], None),)
+
+/*
+   Function: xmlNewParserCtxt
+   ReturnType: xmlParserCtxtPtr
+   Args: ((None, ['void'], None),)
 */
 func XmlNewParserCtxt() *XmlParserCtxt {
 
-
 	c_ret := C.xmlNewParserCtxt()
 
-
-
-	if c_ret == nil {return nil}
-	return &XmlParserCtxt{handler:(C.xmlParserCtxtPtr)(c_ret)}
+	if c_ret == nil {
+		return nil
+	}
+	return &XmlParserCtxt{handler: (C.xmlParserCtxtPtr)(c_ret)}
 }
-/* 
-	   Function: xmlParseFile
-	   ReturnType: xmlDocPtr
-	   Args: (('filename', ['char', '*'], None),)
+
+/*
+   Function: xmlParseFile
+   ReturnType: xmlDocPtr
+   Args: (('filename', ['char', '*'], None),)
 */
-func XmlParseFile(filename string) (g_ret *XmlDoc,err error) {
-	c_filename:= (*C.char)(unsafe.Pointer(C.CString(filename)))
+func XmlParseFile(filename string) (g_ret *XmlDoc, err error) {
+	c_filename := (*C.char)(unsafe.Pointer(C.CString(filename)))
 	defer C.free(unsafe.Pointer(c_filename))
 
 	c_ret := C.xmlParseFile(c_filename)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlParseFile errno %d" ,c_ret)
+		err = fmt.Errorf("xmlParseFile errno %d", c_ret)
 	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+		g_ret = &XmlDoc{handler: (C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlFreeParserCtxt
-	   ReturnType: void
-	   Args: (('ctxt', ['xmlParserCtxtPtr'], None),)
+
+/*
+   Function: xmlFreeParserCtxt
+   ReturnType: void
+   Args: (('ctxt', ['xmlParserCtxtPtr'], None),)
 */
 func XmlFreeParserCtxt(ctxt *XmlParserCtxt) {
-	var c_ctxt C.xmlParserCtxtPtr=nil
-	if ctxt !=nil { c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler) }
+	var c_ctxt C.xmlParserCtxtPtr = nil
+	if ctxt != nil {
+		c_ctxt = (C.xmlParserCtxtPtr)(ctxt.handler)
+	}
 
 	C.xmlFreeParserCtxt(c_ctxt)
 
-
-
-
 }
-/* 
-	   Function: xmlReadMemory
-	   ReturnType: xmlDocPtr
-	   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+
+/*
+   Function: xmlReadMemory
+   ReturnType: xmlDocPtr
+   Args: (('buffer', ['char', '*'], None), ('size', ['int'], None), ('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
 */
-func XmlReadMemory(buffer string,URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
-	c_buffer:= (*C.char)(unsafe.Pointer(C.CString(buffer)))
+func XmlReadMemory(buffer string, URL string, encoding string, options int) (g_ret *XmlDoc, err error) {
+	c_buffer := (*C.char)(unsafe.Pointer(C.CString(buffer)))
 	defer C.free(unsafe.Pointer(c_buffer))
-	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+	c_URL := (*C.char)(unsafe.Pointer(C.CString(URL)))
 	defer C.free(unsafe.Pointer(c_URL))
-	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	c_encoding := (*C.char)(unsafe.Pointer(C.CString(encoding)))
 	defer C.free(unsafe.Pointer(c_encoding))
 	c_options := C.int(options)
-	c_size:=C.int(len(buffer)*1)
-	c_ret := C.xmlReadMemory(c_buffer,c_size,c_URL,c_encoding,c_options)
+	c_size := C.int(len(buffer) * 1)
+	c_ret := C.xmlReadMemory(c_buffer, c_size, c_URL, c_encoding, c_options)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlReadMemory errno %d" ,c_ret)
+		err = fmt.Errorf("xmlReadMemory errno %d", c_ret)
 	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+		g_ret = &XmlDoc{handler: (C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlReadFile
-	   ReturnType: xmlDocPtr
-	   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
+
+/*
+   Function: xmlReadFile
+   ReturnType: xmlDocPtr
+   Args: (('URL', ['char', '*'], None), ('encoding', ['char', '*'], None), ('options', ['int'], None))
 */
-func XmlReadFile(URL string,encoding string,options int) (g_ret *XmlDoc,err error) {
-	c_URL:= (*C.char)(unsafe.Pointer(C.CString(URL)))
+func XmlReadFile(URL string, encoding string, options int) (g_ret *XmlDoc, err error) {
+	c_URL := (*C.char)(unsafe.Pointer(C.CString(URL)))
 	defer C.free(unsafe.Pointer(c_URL))
-	c_encoding:= (*C.char)(unsafe.Pointer(C.CString(encoding)))
+	c_encoding := (*C.char)(unsafe.Pointer(C.CString(encoding)))
 	defer C.free(unsafe.Pointer(c_encoding))
 	c_options := C.int(options)
 
-	c_ret := C.xmlReadFile(c_URL,c_encoding,c_options)
+	c_ret := C.xmlReadFile(c_URL, c_encoding, c_options)
 
 	if c_ret == nil {
-		err = fmt.Errorf("xmlReadFile errno %d" ,c_ret)
+		err = fmt.Errorf("xmlReadFile errno %d", c_ret)
 	} else {
-		g_ret =  &XmlDoc{handler:(C.xmlDocPtr)(c_ret)}
+		g_ret = &XmlDoc{handler: (C.xmlDocPtr)(c_ret)}
 	}
 	return
 }
-/* 
-	   Function: xmlInitParser
-	   ReturnType: void
-	   Args: ((None, ['void'], None),)
+
+/*
+   Function: xmlInitParser
+   ReturnType: void
+   Args: ((None, ['void'], None),)
 */
 func XmlInitParser() {
 
-
 	C.xmlInitParser()
 
-
-
-
 }
-
-

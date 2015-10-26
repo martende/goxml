@@ -1,12 +1,10 @@
 package goxml_test
 
 import (
-    . "launchpad.net/gocheck"
+	. "launchpad.net/gocheck"
 )
 
-
 /* testlibxml2 */
-
 
 func (s *S) test_HTMLtree(c *C) {
 }
@@ -121,4 +119,3 @@ func (s *S) test_xpathInternals(c *C) {
 
 func (s *S) test_xpointer(c *C) {
 }
-
