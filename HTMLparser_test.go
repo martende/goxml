@@ -50,7 +50,7 @@ func (s *S) TesthtmlAutoCloseTag(c *C) {
 }
 
 func (s *S) TesthtmlCreateMemoryParserCtxt(c *C) {
-	r1, err1 := goxml.HtmlCreateMemoryParserCtxt("")
+	r1, err1 := goxml.HtmlCreateMemoryParserCtxt("<html></html>")
 	c.Check(err1, Equals, nil)
 	c.Check(r1, Not(Equals), nil)
 	r2, err2 := goxml.HtmlCreateMemoryParserCtxt("ichwisenicht")
@@ -68,11 +68,12 @@ func (s *S) TestHtmlCtxtReadDoc(c *C) {
 	r, err := goxml.HtmlCtxtReadDoc(nil, "<document></document>", "http://baseurl/", "", 0)
 	c.Check(err, Not(Equals), nil)
 	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
-	ctxt, err := goxml.HtmlCreateMemoryParserCtxt("")
+	content := "<html></html>"
+	ctxt, err := goxml.HtmlCreateMemoryParserCtxt(content)
 	c.Log("AA",ctxt,err,ctxt == nil)
 	c.Check(ctxt, Not(IsNil))
 	c.Check(err, Equals, nil)
-	r, err = goxml.HtmlCtxtReadDoc(ctxt, "<html></html>", "http://baseurl/", "", 0)
+	r, err = goxml.HtmlCtxtReadDoc(ctxt, content, "http://baseurl/", "", 0)
 	c.Check(err, Equals, nil)
 	c.Check(r, Not(Equals), (*goxml.XmlDoc)(nil))
 	c.Check(ctxt.GetValid(), Equals, 1)
@@ -99,7 +100,7 @@ func (s *S) TestHtmlCtxtReadFile(c *C) {
 }
 
 func (s *S) TestHtmlCtxtReadMemory(c *C) {
-	ctxt, _ := goxml.HtmlCreateMemoryParserCtxt("")
+	ctxt, _ := goxml.HtmlCreateMemoryParserCtxt("<html></html>")
 	c.Check(ctxt, Not(Equals), nil)
 	r, err := goxml.HtmlCtxtReadMemory(ctxt, "<html></html>", "http://baseurl/", "UTF-8", 0)
 	c.Check(err, Equals, nil)
