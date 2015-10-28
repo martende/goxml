@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/martende/goxml.svg?branch=master)](https://travis-ci.org/martende/goxml)
+
 # goxml - libxml2 go binding
 ##Info
 
