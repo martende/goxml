@@ -46,7 +46,7 @@ htmlNode , htmlDoc and etc.. are replaced with XmlNode, XmlDoc
 		package main
 		
 		import (
-			"goxml"
+			"github.com/martende/goxml"
 			"os"
 			"fmt"
 		)
