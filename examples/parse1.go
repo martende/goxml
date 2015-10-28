@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "goxml"
+	. "github.com/martende/goxml"
 	"os"
 	"fmt"
 )
@@ -26,6 +26,7 @@ func main() {
 	XmlCheckVersion()
 	
 	if len(os.Args) != 2 {
+		fmt.Println("usage: ./example filename")
         return
     }
     
