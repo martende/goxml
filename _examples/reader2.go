@@ -1,18 +1,18 @@
 package main
 
 import (
-	. "goxml"
+	. "github.com/martende/goxml"
 	"os"
 	"fmt"
 )
 
 /*
 
-Analog http://www.xmlsoft.org/examples/reader1.c
+Analog http://www.xmlsoft.org/examples/reader2.c
 
 Usage:
 
-./reader1 test1.xml
+./reader2 test1.xml
 
 */
 
@@ -45,12 +45,23 @@ func processNode(reader *XmlTextReader) {
 
 
 func streamFile(filename string) {
-    reader,err:=XmlReaderForFile(filename,"",0)
+	/* XML_PARSE_DTDATTR default DTD attributes */
+	/* XML_PARSE_NOENT substitute entities */
+	/* XML_PARSE_DTDVALID validate with the DTD */
+    reader,err:=XmlReaderForFile(filename,"",XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_DTDVALID) 
+
     if ( err == nil) {
     	ret := XmlTextReaderRead(reader)
         for ;ret == 1;ret = XmlTextReaderRead(reader) {
             processNode(reader)
         }
+        /*
+        	* Once the document has been fully parsed check the validation results
+	 	*/
+	 	if (XmlTextReaderIsValid(reader) != 1) {
+		    fmt.Fprintf(os.Stderr, "Document %s does not validate\n", filename);
+		}
+
         XmlFreeTextReader(reader);
         if ret != 0 {
             fmt.Fprintf(os.Stderr, "%s : failed to parse\n", filename);

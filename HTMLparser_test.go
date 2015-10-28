@@ -70,7 +70,7 @@ func (s *S) TestHtmlCtxtReadDoc(c *C) {
 	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
 	content := "<html></html>"
 	ctxt, err := goxml.HtmlCreateMemoryParserCtxt(content)
-	c.Log("AA",ctxt,err,ctxt == nil)
+	c.Log("AA", ctxt, err, ctxt == nil)
 	c.Check(ctxt, Not(IsNil))
 	c.Check(err, Equals, nil)
 	r, err = goxml.HtmlCtxtReadDoc(ctxt, content, "http://baseurl/", "", 0)

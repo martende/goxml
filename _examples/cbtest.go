@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goxml"
+	"github.com/martende/goxml"
 	//"os"
 	"fmt"
 	"runtime"
