@@ -124,7 +124,7 @@ htmlNode , htmlDoc and etc.. are replaced with XmlNode, XmlDoc
 			
 		}
 
- look examples/* and wiki
+ look _examples/* and wiki
 ##TODO:
 
 Change Array Implementation

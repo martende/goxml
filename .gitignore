@@ -2,6 +2,6 @@
 \#*
 *.pyc
 *.o
-examples/parse1
-examples/parse2
-examples/parse3
+_examples/parse1
+_examples/parse2
+_examples/parse3

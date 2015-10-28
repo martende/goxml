@@ -91,7 +91,7 @@ func (s *S) TestHtmlCtxtReadFile(c *C) {
 	c.Check(r, Equals, (*goxml.XmlDoc)(nil))
 
 	ctxt := goxml.HtmlNewParserCtxt()
-	r, err = goxml.HtmlCtxtReadFile(ctxt, "examples/test.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
+	r, err = goxml.HtmlCtxtReadFile(ctxt, "_examples/test.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
 
 	c.Check(err, Equals, nil)
 	c.Check(r, Not(Equals), (*goxml.XmlDoc)(nil))
@@ -176,11 +176,11 @@ func (s *S) TestHtmlReadFile(c *C) {
 	c.Check(doc, Equals, (*goxml.XmlDoc)(nil))
 	c.Check(err, Not(Equals), nil)
 
-	doc, err = goxml.HtmlReadFile("./examples/test.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
+	doc, err = goxml.HtmlReadFile("./_examples/test.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
 	c.Check(doc, Not(Equals), (*goxml.XmlDoc)(nil))
 	c.Check(err, Equals, nil)
 
-	doc, err = goxml.HtmlReadFile("./examples/test_broken.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
+	doc, err = goxml.HtmlReadFile("./_examples/test_broken.html", "UTF-8", goxml.HTML_PARSE_NOBLANKS|goxml.HTML_PARSE_NOERROR|goxml.HTML_PARSE_NOWARNING|goxml.HTML_PARSE_NONET)
 	c.Check(doc, Not(Equals), (*goxml.XmlDoc)(nil))
 	c.Check(err, Equals, nil)
 }
